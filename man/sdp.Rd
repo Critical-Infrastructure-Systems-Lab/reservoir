@@ -17,11 +17,11 @@ sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
-\item{R_disc}{integer. Release discretization--the allowed releases. Default = 100.}
+\item{R_disc}{integer. Release discretization--the allowed releases. Default = 10.}
 
-\item{Q_disc}{integer. Release discretization--the allowed releases. Default = 100.}
+\item{Q_disc}{vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).}
 
-\item{loss_exp}{numerical. The exponent of the loss function. Default value is 2.}
+\item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 

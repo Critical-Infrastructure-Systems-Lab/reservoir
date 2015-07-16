@@ -4,9 +4,9 @@
 #' @param capacity      numerical. The reservoir storage capacity (must be same volumetric unit as Q and R).
 #' @param target        numerical. The target release constant.  
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
-#' @param R_disc        integer. Release discretization--the allowed releases. Default = 100.
-#' @param Q_disc        integer. Release discretization--the allowed releases. Default = 100.
-#' @param loss_exp      numerical. The exponent of the loss function. Default value is 2. 
+#' @param R_disc        integer. Release discretization--the allowed releases. Default = 10.
+#' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
+#' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.995.
@@ -15,10 +15,10 @@
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples storage_cap <- 4 * mean(aggregate(HollandCreek.ts)) 
+#' @examples storage_cap <- 4 * mean(aggregate(HollandCreek.ts))
 #' demand <- 0.8 * mean(HollandCreek.ts)
 #' optimal.releases <- sdp(HollandCreek.ts, capacity = storage_cap, target = demand)
-#'     
+#'
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
                  Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),

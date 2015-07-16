@@ -16,9 +16,9 @@ dp(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
-\item{R_disc}{integer. Release discretization--the allowed releases. Default = 100.}
+\item{R_disc}{integer. Release discretization--the allowed releases. Default = 10.}
 
-\item{loss_exp}{numeric. The exponent of the loss function. Default value is 2.}
+\item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
@@ -30,7 +30,7 @@ dp(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 Returns the time series of optimal releases.
 }
 \description{
-Determines the optimal release sequence for a user-defined objective function.
+Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
 storage_cap <- 4 * mean(aggregate(HollandCreek.ts))

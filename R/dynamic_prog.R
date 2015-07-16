@@ -1,11 +1,11 @@
 #' @title Dynamic Programming
-#' @description Determines the optimal release sequence for a user-defined objective function.
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 #' @param Q             vector or time series object. Net inflows to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be same volumetric unit as Q and R).
-#' @param target        numerical. The target release constant.  
+#' @param target        numerical. The target release constant.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
-#' @param R_disc        integer. Release discretization--the allowed releases. Default = 100.
-#' @param loss_exp      numeric. The exponent of the loss function. Default value is 2. 
+#' @param R_disc        integer. Release discretization--the allowed releases. Default = 10.
+#' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
