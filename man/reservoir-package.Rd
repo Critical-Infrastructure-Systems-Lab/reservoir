@@ -12,7 +12,7 @@
 \tabular{ll}{
 Package: \tab reservoir\cr
 Type: \tab Package\cr
-Version: \tab 1.4\cr
+Version: \tab 1.0.0\cr
 Date: \tab 2015-06-17\cr
 License: \tab GPL (>= 2)\cr
 }
@@ -39,10 +39,10 @@ no_fail_storage <- x_Rippl$Rippl_storage
 # constant release (R) equal to 70 percent of the mean inflow.
 no_fail_storage <- vector("numeric", 500)
 for (i in 1:length(no_fail_storage)){
-x <- ts(rlnorm(1200), start = c(1900, 1), frequency = 12)
-no_fail_storage[i] <- Rippl(x, R = rep(mean(x) * 0.7,
-length = length(x)),plot=FALSE)$Rippl_storage
-}
+  x <- ts(rlnorm(1200), start = c(1900, 1), frequency = 12)
+  no_fail_storage[i] <- Rippl(x, R = rep(mean(x) * 0.7,
+  length = length(x)),plot = FALSE)$Rippl_storage
+  }
 hist(no_fail_storage)
 }
 
