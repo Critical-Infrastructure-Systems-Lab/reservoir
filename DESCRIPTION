@@ -1,6 +1,6 @@
 Package: reservoir
 Type: Package
-Title: An R package for the analysis, design, and operation of water supply reservoirs
+Title: Tools for Analysis, Design, and Operation of Single-Storage Water Supply Systems
 Version: 1.0.0
 Date: 2015-06-17
 Authors@R: as.person(c(
@@ -8,11 +8,11 @@ Authors@R: as.person(c(
     "Stefano Galelli <stefano_galelli@sutd.edu.sh> [aut]"
   ))
 URL: https://github.com/swd-turner/reservoir
-Description: Measure single reservoir performance using resilience, reliability,
-    and vulnerability metrics; develop storage-yield-reliability relationships; 
-    determine no-fail Rippl storage with sequent peak analysis; optimize release
+Description: Measure single-storage water supply system performance using resilience, reliability,
+    and vulnerability metrics; assess storage-yield-reliability relationships; 
+    determine no-fail storage with sequent peak analysis; optimize release
     decisions using determinisitc and stochastic dynamic programming; evaluate
-    inflow characteristics.
+    inflow persistence using the Hurst coefficient.
 License: GPL (>= 2)
 LazyData: yes
 Imports: gtools

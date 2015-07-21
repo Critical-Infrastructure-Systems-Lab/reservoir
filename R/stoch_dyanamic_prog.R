@@ -9,7 +9,7 @@
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
-#' @param tol           numerical. The tolerance for policy convergence. The default value is 0.995.
+#' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the time series of optimal releases.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
@@ -22,7 +22,7 @@
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
                  Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                 loss_exp = 2, S_initial = 1, plot = TRUE, tol = 0.995, rep_rrv = FALSE){
+                 loss_exp = 2, S_initial = 1, plot = TRUE, tol = 0.99, rep_rrv = FALSE){
   
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")

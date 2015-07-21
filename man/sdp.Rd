@@ -6,7 +6,7 @@
 \usage{
 sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
   0.475, 0.7125, 0.95, 1), loss_exp = 2, S_initial = 1, plot = TRUE,
-  tol = 0.995, rep_rrv = FALSE)
+  tol = 0.99, rep_rrv = FALSE)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir.}
@@ -27,7 +27,7 @@ sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
-\item{tol}{numerical. The tolerance for policy convergence. The default value is 0.995.}
+\item{tol}{numerical. The tolerance for policy convergence. The default value is 0.990.}
 
 \item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }

@@ -3,6 +3,6 @@
 #' @name HollandCreek.ts
 #' @docType data
 #' @author Sean Turner
-#' @references Australian Bureau of Meteorology
+#' @references Australian Bureau of Meteorology (Hydrologic Reference Stations)
 #' @keywords data_BOM
 NULL

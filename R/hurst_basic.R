@@ -9,7 +9,7 @@
 #' @export
 Hurst <- function(Q) {
     if (frequency(Q) != 1)
-        warning("Q is not annual inflow totals")
+        warning("Q is not an annualized series")
     if (is.ts(Q) == FALSE && is.vector(Q) == FALSE)
         stop("Q must be time series or vector object")
     Q <- Q - mean(Q)
