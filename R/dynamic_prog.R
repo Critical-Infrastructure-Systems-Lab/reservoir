@@ -11,9 +11,10 @@
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @examples storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
 #' optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' }
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @export
 dp <- function(Q, capacity, target, S_disc = 1000,

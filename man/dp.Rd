@@ -33,9 +33,10 @@ Returns the time series of optimal releases and, if requested, the reliability, 
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
-storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
 optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+}
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.

@@ -15,10 +15,10 @@
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
 #' optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
-#'
+#' }
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
                  Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),

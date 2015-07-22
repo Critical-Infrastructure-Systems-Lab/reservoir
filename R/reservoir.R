@@ -1,4 +1,4 @@
-#' reservoir: Tools for Analysis, Design, and Operation of Single-Storage Water Supply Systems
+#' reservoir: Tools for Analysis, Design, and Operation of Water Supply Storages
 #'
 #' Measure single reservoir performance using resilience, reliability, and vulnerability metrics; compute storage-yield-reliability relationships; determine no-fail Rippl storage with sequent peak analysis; optimize release decisions using determinisitc and stochastic dynamic programming; evaluate inflow characteristics.
 #' 
@@ -8,12 +8,11 @@
 #' The \code{\link{rrv}} function returns three reliability measures, relilience, and dimensionless vulnerability for given storage, inflow time series, and target release. Users can assume Standard Operating Policy, or can apply the output of \code{\link{sdp}} analysis to determine the RRV metrics under different operating objectives.
 #' The \code{\link{Hurst}} function estimates the Hurst coefficient for an annualized inflow time series.   
 #' @section Optimization functions:
-#' Users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions using Dynamic Programming (\code{\link{dp}}) or Stochastic Dynamic Programming (\code{\link{sdp}}). There is also an option to simulate the operating policies through the inflow time series to compute reliability, resilience, and vulnerability.
+#' Users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions using Dynamic Programming (\code{\link{dp}}) or Stochastic Dynamic Programming (\code{\link{sdp}}). There is also an option to simulate the output of \code{\link{sdp}} using the \code{\link{rrv}} function to validate the policy under alternative inflows or analyze reservoir performance under different operating objectives.
 #'
 #' @docType package
 #' @name reservoir
-#' @examples
-#' # 1. Express the distribution of Rippl storage for a known inflow process...
+#' @examples \donttest{# 1. Express the distribution of Rippl storage for a known inflow process...
 #' 
 #' # a) Assume the inflow process follows a lognormal distribution
 #' # (meanlog = 0, sdlog = 1):
@@ -37,6 +36,7 @@
 #'   length = length(x)),plot = FALSE)$Rippl_storage
 #' }
 #' hist(no_fail_storage)
+#' 
 #' 
 #' # 2. Trade off between annual reliability and vulnerability for a given system...
 #' 
@@ -62,7 +62,7 @@
 #'  pareto_results$vulnerability[which(row.names(pareto_results)==loss_f)] <- sdp_temp$vulnerability
 #'  }
 #' plot (pareto_results$reliability,pareto_results$vulnerability, type = "b", lty = 3)
-
+#' }
 
 NULL
 #> NULL

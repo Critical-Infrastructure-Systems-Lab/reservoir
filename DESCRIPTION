@@ -1,6 +1,6 @@
 Package: reservoir
 Type: Package
-Title: Tools for Analysis, Design, and Operation of Single-Storage Water Supply Systems
+Title: Tools for Analysis, Design, and Operation of Water Supply Storages
 Version: 1.0.0
 Date: 2015-06-17
 Authors@R: as.person(c(
