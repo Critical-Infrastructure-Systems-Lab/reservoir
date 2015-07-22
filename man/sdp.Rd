@@ -11,13 +11,13 @@ sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir.}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be same volumetric unit as Q and R).}
+\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
 
 \item{target}{numerical. The target release constant.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
-\item{R_disc}{integer. Release discretization--the allowed releases. Default = 10.}
+\item{R_disc}{integer. Release discretization. Default = 10 divisions.}
 
 \item{Q_disc}{vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).}
 
@@ -32,15 +32,15 @@ sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
 \item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }
 \value{
-Returns the time series of optimal releases.
+Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy.
 }
 \description{
 Derives the optimal release policy based on storage state, inflow class and within-year period.
 }
 \examples{
-storage_cap <- 4 * mean(aggregate(HollandCreek.ts))
-demand <- 0.8 * mean(HollandCreek.ts)
-optimal.releases <- sdp(HollandCreek.ts, capacity = storage_cap, target = demand)
+storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
+optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.

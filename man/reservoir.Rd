@@ -49,7 +49,7 @@ hist(no_fail_storage)
 # 2. Trade off between annual reliability and vulnerability for a given system...
 
 # a) Define the system: inflow time series, storage, and target release.
-inflow_ts <- HollandCreek.ts
+inflow_ts <- ResX_inflow.ts
 storage_cap <- 2 * mean(aggregate(inflow_ts)) #Storage ratio = 2
 demand <- 0.8 * mean(inflow_ts)
 

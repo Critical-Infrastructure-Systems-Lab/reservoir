@@ -9,9 +9,8 @@
 #' @param max.iterations  Maximum number of iterations for yield computation.
 #' @param double_cycle  logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)
 #' @return Returns the required storage capacity necessary to supply specified yield with specified reliability.
-#' @references x
 #' @examples # Determine the required storage for 95 % reliability and yield equal to 80 % of the mean inflow.
-#' storage(HollandCreek.ts, yield = 0.8*mean(HollandCreek.ts), reliability = 0.95)
+#' storage(ResX_inflow.ts, yield = 0.8*mean(ResX_inflow.ts), reliability = 0.95)
 #' @export
 storage <- function(Q, yield, reliability, profile = rep(1, frequency(Q)),
                     plot = TRUE, S_initial = 1, max.iterations = 50, double_cycle = FALSE) {

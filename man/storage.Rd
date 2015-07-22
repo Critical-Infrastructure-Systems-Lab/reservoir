@@ -32,9 +32,6 @@ Returns the required storage for given inflow time series, yield, and target tim
 }
 \examples{
 # Determine the required storage for 95 \% reliability and yield equal to 80 \% of the mean inflow.
-storage(HollandCreek.ts, yield = 0.8*mean(HollandCreek.ts), reliability = 0.95)
-}
-\references{
-x
+storage(ResX_inflow.ts, yield = 0.8*mean(ResX_inflow.ts), reliability = 0.95)
 }
 

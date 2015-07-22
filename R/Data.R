@@ -1,8 +1,9 @@
-#' Holland Creek streamflow 1961 - 2011 (monthly)
+#' Reservoir X inflow time series 1964 - 2014 (monthly)
 #'
-#' @name HollandCreek.ts
+#' @name ResX_inflow.ts
 #' @docType data
 #' @author Sean Turner
-#' @references Australian Bureau of Meteorology (Hydrologic Reference Stations)
-#' @keywords data_BOM
+#' @format time series object
+#' @source \url{www.bom.gov.au/water/hrs/}
+#' @examples plot(ResX_inflow.ts)
 NULL

@@ -7,24 +7,24 @@
 Rippl(Q, R, double_cycle = FALSE, plot = TRUE)
 }
 \arguments{
-\item{Q}{a time series or vector  of net inflows to the reservoir.}
+\item{Q}{a time series or vector  of net inflows to the reservoir (volumetric).}
 
-\item{R}{a time series or vector of target releases. Must be the same length as Q.}
+\item{R}{a time series or vector of target releases (volumetric). Must be the same length as Q.}
 
-\item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
+\item{double_cycle}{logical. If TRUE the Q and R time series will be replicated and placed end-to-end to double the simulation. Recommended if the critical period occurs at the end of the sequence.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram is plotted.}
 }
 \value{
-Returns the storage behaviour time series for the no-failure (Rippl) reservoir given net inflows Q and target release R.
+Returns the no-fail storage capacity and corresponding storage behaviour time series.
 }
 \description{
-Computes the Rippl no-failure storage for a given time series of inflows and target release using the sequent peak algorith. Returns storage behavior time-series.
+Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorith.
 }
 \examples{
 # define a release vector for a constant release equal to 70 \% of the mean inflow
-release <- rep(mean(HollandCreek.ts) * 0.7, length(HollandCreek.ts))
-no_fail_storage <- Rippl(HollandCreek.ts,release)
+release <- rep(mean(ResX_inflow.ts) * 0.7, length(ResX_inflow.ts))
+no_fail_storage <- Rippl(ResX_inflow.ts,release)
 }
 \references{
 Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.

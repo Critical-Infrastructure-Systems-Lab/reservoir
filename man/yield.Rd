@@ -32,13 +32,11 @@ Returns the yield for given inflow time series, reservoir capacity, and required
 }
 \examples{
 # Compute yield for 0.95 reliability
-yield_HollandCreek <- yield(HollandCreek.ts, capacity = 100000, reliability = 0.95)
+yield_ResX <- yield(ResX_inflow.ts, capacity = 100000, reliability = 0.95)
 # Compute yield for quarterly time series with seasonal demand profile
-quarterly.ts <- aggregate(HollandCreek.ts, nfrequency = 4)
-yield_HollandCreek.quart <- yield(quarterly.ts,
+
+quarterly.ts <- aggregate(ResX_inflow.ts, nfrequency = 4)
+yield_ResX.quart <- yield(quarterly.ts,
 capacity = 100000, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
-}
-\references{
-McMahon, T.A., Adeloye, A.J., Zhou, S.L. (2006) Understanding performance measures of reservoirs, Journal of Hydrology 324 (359-382)
 }
 

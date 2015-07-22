@@ -1,23 +1,23 @@
 #' @title Stochastic Dynamic Programming
 #' @description Derives the optimal release policy based on storage state, inflow class and within-year period.
 #' @param Q             time series object. Net inflows to the reservoir.
-#' @param capacity      numerical. The reservoir storage capacity (must be same volumetric unit as Q and R).
+#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.  
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
-#' @param R_disc        integer. Release discretization--the allowed releases. Default = 10.
+#' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
-#' @return Returns the time series of optimal releases.
+#' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples storage_cap <- 4 * mean(aggregate(HollandCreek.ts))
-#' demand <- 0.8 * mean(HollandCreek.ts)
-#' optimal.releases <- sdp(HollandCreek.ts, capacity = storage_cap, target = demand)
+#' @examples storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
+#' optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
 #'
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
@@ -189,16 +189,16 @@ sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     
     #===============================================================================
     
-    results <- list(R_policy,S,R_rec,rel_ann, rel_time, rel_vol, resilience, vulnerability, Q_disc)
-    names(results) <- c("release_policy", "storage", "releases", "annual_reliability",
+    results <- list(R_policy, Bellman, S, R_rec, rel_ann, rel_time, rel_vol, resilience, vulnerability, Q_disc)
+    names(results) <- c("release_policy", "Bellman", "storage", "releases", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "flow_disc")
     
 
     
   } else {
-    results <- list(R_policy, S, R_rec, Q_disc)
-    names(results) <- c("release_policy", "storage", "releases", "flow_disc")
+    results <- list(R_policy, Bellman, S, R_rec, Q_disc)
+    names(results) <- c("release_policy", "Bellman", "storage", "releases", "flow_disc")
   }
   
   return(results)

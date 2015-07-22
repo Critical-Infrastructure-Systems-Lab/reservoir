@@ -7,7 +7,7 @@
 Hurst(Q)
 }
 \arguments{
-\item{Q}{vector time series object. Streamflow. Should be annual resolution if time series.}
+\item{Q}{vector or annualized time series object. Net inflows or streamflow totals.}
 }
 \value{
 Returns an estimate of the Hurst coefficient, H (0.5 < H < 1).
@@ -16,8 +16,8 @@ Returns an estimate of the Hurst coefficient, H (0.5 < H < 1).
 Hurst coefficient estimation.
 }
 \examples{
-Q.annual <- aggregate(HollandCreek.ts) #convert monthly to annual data
-Hurst(Q.annual)
+Q_annual <- aggregate(ResX_inflow.ts) #convert monthly to annual data
+Hurst(Q_annual)
 }
 \references{
 H.E.Hurst (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.

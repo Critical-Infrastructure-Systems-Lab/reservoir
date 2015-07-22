@@ -10,13 +10,13 @@ dp(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 \arguments{
 \item{Q}{vector or time series object. Net inflows to the reservoir.}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be same volumetric unit as Q and R).}
+\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
 
 \item{target}{numerical. The target release constant.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
-\item{R_disc}{integer. Release discretization--the allowed releases. Default = 10.}
+\item{R_disc}{integer. Release discretization. Default = 10 divisions.}
 
 \item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
 
@@ -27,15 +27,15 @@ dp(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 \item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }
 \value{
-Returns the time series of optimal releases.
+Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 }
 \description{
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
-storage_cap <- 4 * mean(aggregate(HollandCreek.ts))
-demand <- 0.8 * mean(HollandCreek.ts)
-optimal.releases <- dp(HollandCreek.ts, capacity = storage_cap, target = demand)
+storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
+demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
+optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.

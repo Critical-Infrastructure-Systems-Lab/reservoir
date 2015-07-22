@@ -30,9 +30,9 @@ Computes time-based, annual, and volumetric reliability, as well as resilience a
 }
 \examples{
 # Determine the reliability, resilience and vulnerability for reservoir on Holland Creek
-demand <- rep(0.8 * mean(HollandCreek.ts), length = length(HollandCreek.ts))
-storage_cap <- 2*mean(aggregate(HollandCreek.ts))  # 2 years' storage
-rrv(HollandCreek.ts, R_target = demand, capacity = storage_cap)
+demand <- rep(0.8 * mean(ResX_inflow.ts), length = length(ResX_inflow.ts))
+storage_cap <- 2*mean(aggregate(ResX_inflow.ts))  # 2 years' storage
+rrv(ResX_inflow.ts, R_target = demand, capacity = storage_cap)
 }
 \references{
 McMahon, T.A., Adeloye, A.J., Zhou, S.L. (2006) Understanding performance measures of reservoirs, Journal of Hydrology 324 (359-382)
