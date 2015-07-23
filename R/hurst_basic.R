@@ -6,6 +6,7 @@
 #' @references Pfaff, B. (2008) Analysis of integrated and cointegrated time series with R, Springer, New York. [p.68]
 #' @examples Q_annual <- aggregate(ResX_inflow.ts) #convert monthly to annual data
 #' Hurst(Q_annual)
+#' @import stats
 #' @export
 Hurst <- function(Q) {
     if (frequency(Q) != 1)

@@ -16,6 +16,8 @@
 #' optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
 #' }
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
+#' @importFrom graphics layout
+#' @import stats 
 #' @export
 dp <- function(Q, capacity, target, S_disc = 1000,
                R_disc = 10, loss_exp = 2, S_initial = 1,

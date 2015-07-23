@@ -13,6 +13,8 @@
 #' demand <- rep(0.8 * mean(ResX_inflow.ts), length = length(ResX_inflow.ts))
 #' storage_cap <- 2*mean(aggregate(ResX_inflow.ts))  # 2 years' storage 
 #' rrv(ResX_inflow.ts, R_target = demand, capacity = storage_cap)
+#' @importFrom graphics layout
+#' @import stats
 #' @export
 rrv <- function(Q, R_target, capacity, double_cycle = FALSE,
                 plot = TRUE, S_initial = 1, policy = NULL) {

@@ -16,6 +16,8 @@
 #' quarterly.ts <- aggregate(ResX_inflow.ts, nfrequency = 4)
 #' yield_ResX.quart <- yield(quarterly.ts,
 #' capacity = 100000, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
+#' @importFrom graphics layout
+#' @import stats
 #' @export
 yield <- function(Q, capacity, reliability, profile = rep(1, frequency(Q)),
                   plot = TRUE, S_initial = 1, max.iterations = 50, double_cycle = FALSE) {
