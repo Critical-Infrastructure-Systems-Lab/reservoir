@@ -11,7 +11,6 @@
 #' @examples # define a release vector for a constant release equal to 70 % of the mean inflow
 #' release <- rep(mean(ResX_inflow.ts) * 0.7, length(ResX_inflow.ts))
 #' no_fail_storage <- Rippl(ResX_inflow.ts,release)
-#' @importFrom graphics layout
 #' @import stats
 #' @export
 Rippl <- function(Q, R, double_cycle = FALSE, plot = TRUE) {
@@ -35,7 +34,6 @@ Rippl <- function(Q, R, double_cycle = FALSE, plot = TRUE) {
     }
     K <- ts(K[2:length(K)], start = start(Q), frequency = frequency(Q))
     if (plot) {
-        layout(1:2)
         plot(Q, ylab = "inflow", type = "l")
         plot(max(K) - K, ylab = "storage")
     }

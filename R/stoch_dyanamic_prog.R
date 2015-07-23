@@ -19,7 +19,6 @@
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
 #' optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
 #' }
-#' @importFrom graphics layout
 #' @import stats
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
@@ -143,8 +142,6 @@ sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   if(plot) {
-    layout(1:3)
-    plot(Q, ylab = "inflow")
     plot(S, ylab = "storage", ylim = c(0, capacity))
     plot(R_rec, ylab = "release", ylim = c(0, target))
     }

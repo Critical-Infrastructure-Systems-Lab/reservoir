@@ -1,4 +1,4 @@
-This is my first R-package and first submission to CRAN.
+This is my first R-package.
 
 ## Test environments
 * x86_64-w64-mingw32, R version 3.2.1

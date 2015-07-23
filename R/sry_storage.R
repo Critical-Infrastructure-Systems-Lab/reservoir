@@ -11,7 +11,6 @@
 #' @return Returns the required storage capacity necessary to supply specified yield with specified reliability.
 #' @examples # Determine the required storage for 95 % reliability and yield equal to 80 % of the mean inflow.
 #' storage(ResX_inflow.ts, yield = 0.8*mean(ResX_inflow.ts), reliability = 0.95)
-#' @importFrom graphics layout
 #' @import stats
 #' @export
 storage <- function(Q, yield, reliability, profile = rep(1, frequency(Q)),
@@ -71,7 +70,6 @@ storage <- function(Q, yield, reliability, profile = rep(1, frequency(Q)),
     }
     
     if (plot) {
-        layout(1:2)
         plot(ts(S[2:length(S)], start = start(Q),
                 frequency = frequency(Q)), ylab = "Storage",main = (paste0("Storage = ", 
             round(mid_storage, 3), " at ", round(reliability_0, 3) * 100, " % reliability")))

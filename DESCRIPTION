@@ -17,5 +17,4 @@ License: GPL (>= 2)
 LazyData: yes
 Imports:
     gtools,
-    stats,
-    graphics
+    stats

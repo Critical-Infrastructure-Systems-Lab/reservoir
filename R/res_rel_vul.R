@@ -13,7 +13,6 @@
 #' demand <- rep(0.8 * mean(ResX_inflow.ts), length = length(ResX_inflow.ts))
 #' storage_cap <- 2*mean(aggregate(ResX_inflow.ts))  # 2 years' storage 
 #' rrv(ResX_inflow.ts, R_target = demand, capacity = storage_cap)
-#' @importFrom graphics layout
 #' @import stats
 #' @export
 rrv <- function(Q, R_target, capacity, double_cycle = FALSE,
@@ -130,8 +129,6 @@ rrv <- function(Q, R_target, capacity, double_cycle = FALSE,
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability")
     if (plot) {
-        layout(1:3)
-        plot(Q, ylab = "inflow")
         plot(ts(S[2:length(S)], start = start(Q), frequency = frq), ylab = "storage", ylim = c(0, capacity))
         plot(ts(R, start = start(Q), frequency = frq), ylab = "release", ylim = c(0, max(R_target)))
     }

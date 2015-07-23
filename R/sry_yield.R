@@ -16,7 +16,6 @@
 #' quarterly.ts <- aggregate(ResX_inflow.ts, nfrequency = 4)
 #' yield_ResX.quart <- yield(quarterly.ts,
 #' capacity = 100000, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
-#' @importFrom graphics layout
 #' @import stats
 #' @export
 yield <- function(Q, capacity, reliability, profile = rep(1, frequency(Q)),
@@ -71,10 +70,8 @@ yield <- function(Q, capacity, reliability, profile = rep(1, frequency(Q)),
         }
     }
     if (plot) {
-        layout(1:2)
         plot(ts(S[2:length(S)], start = start(Q), frequency = frequency(Q)), ylab = "Storage")
-    
-    plot(ts(R, start = start(Q), frequency = frequency(Q)),
+        plot(ts(R, start = start(Q), frequency = frequency(Q)),
          ylim = c(0, max(R)), ylab = "Water supplied", main = (paste0("Yield = ", 
         round(mid_yield, 2), " at ", reliability_0 * 100, " % reliability")))
     }
