@@ -124,10 +124,12 @@ rrv <- function(Q, R_target, capacity, double_cycle = FALSE,
     
     #===============================================================================
     
-    results <- list(rel_ann, rel_time, rel_vol, resilience, vulnerability)
+    results <- list(rel_ann, rel_time, rel_vol, resilience, vulnerability,
+                    ts(S[2:length(S)], start = start(Q), frequency = frq),
+                    ts(R, start = start(Q), frequency = frq))
     names(results) <- c("annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability")
+                        "resilience", "vulnerability", "storage", "releases")
     if (plot) {
         plot(ts(S[2:length(S)], start = start(Q), frequency = frq), ylab = "storage", ylim = c(0, capacity))
         plot(ts(R, start = start(Q), frequency = frq), ylab = "release", ylim = c(0, max(R_target)))
