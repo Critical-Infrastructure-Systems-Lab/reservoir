@@ -2,7 +2,7 @@
 #' @description Returns the yield for given inflow time series, reservoir capacity, and required time-based reliability. Assumes standard operating policy. Yield is computed iteratively using the bi-section method.
 #' @param Q               a time series or vector  of net inflows to the reservoir.
 #' @param capacity        numerical.  (must be same volumetric unit as Q and R).
-#' @param reliability     numerical.  (must be same volumetric unit as Q and R).
+#' @param reliability     numerical.
 #' @param profile         a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.
 #' @param plot            logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param S_initial       numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
