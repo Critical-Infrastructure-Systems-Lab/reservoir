@@ -12,7 +12,7 @@ storage(Q, yield, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
 
 \item{yield}{numerical.  (must be same volumetric unit as Q and R).}
 
-\item{reliability}{numerical.  (must be same volumetric unit as Q and R).}
+\item{reliability}{numerical.}
 
 \item{profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
 

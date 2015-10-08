@@ -3,6 +3,7 @@
 export(Hurst)
 export(Rippl)
 export(dp)
+export(dp_multi)
 export(rrv)
 export(sdp)
 export(sdp_simple)
