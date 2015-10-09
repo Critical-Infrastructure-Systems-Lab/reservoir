@@ -58,7 +58,7 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
     Balance_mat[which(Balance_mat < 0)] <- NaN
     Spill_costs <- Balance_mat - capacity
     Spill_costs[which(Spill_costs < 0)] <- 0
-    Spill_costs <- (Spill_costs / mean(Q)) ^ loss_exp[2]
+    Spill_costs <- (Spill_costs / quantile(Q, 0.95)) ^ loss_exp[2]
     Balance_mat[which(Balance_mat > capacity)] <- capacity
     Vol_costs <- ((Balance_mat - (vol_targ * capacity)) / (vol_targ * capacity)) ^ 2
     Implied_S_state <- round(1 + ((Balance_mat / capacity) *
@@ -93,6 +93,15 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
   R <- ts(R, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   # ===================================================================================
+  
+  
+  total_release_cost <- sum((R/target)[which((R/target) <  1)] ^ loss_exp[1])
+  total_spill_cost <- sum((Spill / quantile(Q, 0.95)) ^ loss_exp[2])
+  total_volume_cost <- sum(((S - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3])
+  total_weighted_cost <- weights[1] * total_release_cost + weights[2] * total_spill_cost + weights[3] * total_volume_cost 
+  costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
+  names(costs) <- c("total_release_cost", "total_spill_cost", "total_volume_cost", "total_weighted_cost")
+  
   
   
   # COMPUTE RRV METRICS FROM SIMULATION RESULTS---------------------------------------
@@ -135,7 +144,7 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
       }
     }
     
-    results <- list(S, R, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability)
+    results <- list(S, R, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, costs)
     names(results) <- c("storage", "releases", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability")
@@ -143,8 +152,8 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
     
     
   } else {
-    results <- list(S, R, Spill)
-    names(results) <- c("storage", "releases", "spill")
+    results <- list(S, R, Spill, costs)
+    names(results) <- c("storage", "releases", "spill", "total_costs")
   }
   
   #===============================================================================

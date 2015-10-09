@@ -77,7 +77,7 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
       
       Spill_costs <- S.t_plus_1 - capacity
       Spill_costs[which(Spill_costs < 0)] <- 0
-      Spill_costs <- (Spill_costs / mean(Q)) ^ loss_exp[2]
+      Spill_costs <- (Spill_costs / quantile(Q, 0.95)) ^ loss_exp[2]
       
       S.t_plus_1[which(S.t_plus_1 > capacity)] <- capacity
       Vol_costs <- ((S.t_plus_1 - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3]
@@ -151,6 +151,13 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
     plot(Spill, ylab = "spill")
   }
   
+  total_release_cost <- sum((R_rec/target)[which((R_rec/target) <  1)] ^ loss_exp[1])
+  total_spill_cost <- sum((Spill / quantile(Q, 0.95)) ^ loss_exp[2])
+  total_volume_cost <- sum(((S - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3])
+  total_weighted_cost <- weights[1] * total_release_cost + weights[2] * total_spill_cost + weights[3] * total_volume_cost 
+  costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
+  names(costs) <- c("total_release_cost", "total_spill_cost", "total_volume_cost", "total_weighted_cost")
+  
   if (rep_rrv == TRUE){
     
     # COMPUTE RRV METRICS FROM SIMULATION RESULTS---------------------------------------
@@ -193,16 +200,16 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
     
     #===============================================================================
     
-    results <- list(R_policy, Bellman, S, R_rec, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, Q_disc)
+    results <- list(R_policy, Bellman, S, R_rec, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, Q_disc, costs)
     names(results) <- c("release_policy", "Bellman", "storage", "releases", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability", "flow_disc")
+                        "resilience", "vulnerability", "flow_disc", "costs")
     
     
     
   } else {
-    results <- list(R_policy, Bellman, S, R_rec, Spill, Q_disc)
-    names(results) <- c("release_policy", "Bellman", "storage", "releases", "spill", "flow_disc")
+    results <- list(R_policy, Bellman, S, R_rec, Spill, Q_disc, costs)
+    names(results) <- c("release_policy", "Bellman", "storage", "releases", "spill", "flow_disc", "total_costs")
   }
   
   return(results)
