@@ -15,7 +15,7 @@ dp_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 1, 1),
 
 \item{target}{numerical. The target release constant.}
 
-\item{R_max}{numerical. The maximum controlled (non-spill) release.}
+\item{R_max}{numerical. The maximum controlled release.}
 
 \item{vol_targ}{numerical. The target storage volume constant (as proportion of capacity).}
 

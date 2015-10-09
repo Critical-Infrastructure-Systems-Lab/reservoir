@@ -4,7 +4,7 @@
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
-#' @param R_max         numerical. The maximum controlled (non-spill) release.
+#' @param R_max         numerical. The maximum controlled release.
 #' @param weights       vector of length 3 indicating weighting to be applied to release, spill and water level objectives respectively.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
