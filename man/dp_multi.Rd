@@ -4,7 +4,7 @@
 \alias{dp_multi}
 \title{Dynamic Programming with multiple objectives}
 \usage{
-dp_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 1, 1),
+dp_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 2, 1),
   loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1,
   plot = TRUE, rep_rrv = FALSE)
 }
@@ -42,7 +42,8 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 \examples{
 \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+optimal.releases <- dp_multi(ResX_inflow.ts, capacity = storage_cap,
+target = demand, R_max = 2 * demand)
 }
 }
 \references{

@@ -19,11 +19,12 @@
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
 #' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap,
+#' target = demand, R_max = 2 * demand)
 #' }
 #' @import stats
 #' @export
-sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 1, 1),
+sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 2, 1),
                               S_disc = 1000, R_disc = 10,
                         Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
                         loss_exp = c(2,2,2), S_initial = 1, plot = TRUE, tol = 0.99, rep_rrv = FALSE){
@@ -80,7 +81,7 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
       Spill_costs <- (Spill_costs / quantile(Q, 0.95)) ^ loss_exp[2]
       
       S.t_plus_1[which(S.t_plus_1 > capacity)] <- capacity
-      Vol_costs <- ((S.t_plus_1 - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3]
+      Vol_costs <- abs(((S.t_plus_1 - vol_targ * capacity) / (vol_targ * capacity))) ^ loss_exp[3]
       Implied_S_state <- round(1 + (S.t_plus_1 / capacity)
                                * (length(S_states) - 1))
       

@@ -17,13 +17,14 @@
 #' @references Graham, N. and Georgakakos, K. (2010)...
 #' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' optimal.releases <- dp_multi(ResX_inflow.ts, capacity = storage_cap,
+#' target = demand, R_max = 2 * demand)
 #' }
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @import stats 
 #' @export
 dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
-                     weights = c(4, 1, 1), loss_exp = c(2, 2, 2),
+                     weights = c(4, 2, 1), loss_exp = c(2, 2, 2),
                      S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE,
                      rep_rrv = FALSE) {
   
@@ -60,7 +61,7 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
     Spill_costs[which(Spill_costs < 0)] <- 0
     Spill_costs <- (Spill_costs / quantile(Q, 0.95)) ^ loss_exp[2]
     Balance_mat[which(Balance_mat > capacity)] <- capacity
-    Vol_costs <- ((Balance_mat - (vol_targ * capacity)) / (vol_targ * capacity)) ^ 2
+    Vol_costs <- abs(((Balance_mat - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3]
     Implied_S_state <- round(1 + ((Balance_mat / capacity) *
                                     (length(S_states) - 1)))
     Cost_mat <- weights[1] * Cost_mat + weights[2] * Spill_costs + weights[3] * Vol_costs

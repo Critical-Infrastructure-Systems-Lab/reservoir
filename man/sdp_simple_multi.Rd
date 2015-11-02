@@ -5,7 +5,7 @@
 \title{Stochastic Dynamic Programming (Simplified, multi-objective)}
 \usage{
 sdp_simple_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4,
-  1, 1), S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125,
+  2, 1), S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125,
   0.95, 1), loss_exp = c(2, 2, 2), S_initial = 1, plot = TRUE,
   tol = 0.99, rep_rrv = FALSE)
 }
@@ -47,7 +47,8 @@ Derives the optimal release policy based on storage state and within-year period
 \examples{
 \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap, target = demand)
+optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap,
+target = demand, R_max = 2 * demand)
 }
 }
 \references{
