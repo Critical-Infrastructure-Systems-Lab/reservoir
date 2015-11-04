@@ -128,7 +128,7 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
       R_rec[t_index] <- R
       if ( (S[t_index] - R + Qx) > capacity) {
         S[t_index + 1] <- capacity
-        Spill[t_index] <- S[t_index] - R + Qx
+        Spill[t_index] <- S[t_index] - R + Qx - capacity
       }else{
         if ( (S[t_index] - R + Qx) < 0) {
           S[t_index + 1] <- 0
