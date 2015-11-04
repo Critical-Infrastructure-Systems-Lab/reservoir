@@ -118,7 +118,7 @@ sdp_simple <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     }
   }
   
-  R_policy <- (R_policy - 1) / (R_disc - 1)
+  R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   if(plot) {

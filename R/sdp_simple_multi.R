@@ -140,7 +140,7 @@ sdp_simple_multi <- function (Q, capacity, target, R_max, vol_targ = 0.75, weigh
     }
   }
   
-  R_policy <- (R_policy - 1) / (R_disc - 1)
+  R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   Spill <- ts(Spill, start = start(Q), frequency = frq)
