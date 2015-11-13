@@ -1,6 +1,6 @@
 #' @title Stochastic Dynamic Programming (Simplified, multi-objective)
 #' @description Derives the optimal release policy based on storage state and within-year period only. The objective is to minimise a penalty cost function based on water supply, spill, and water level.
-#' @param Q             time series object. Net inflows to the reservoir.
+#' @param Q             time series object. Net inflow to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).

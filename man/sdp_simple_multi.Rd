@@ -10,7 +10,7 @@ sdp_simple_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4,
   tol = 0.99, rep_rrv = FALSE)
 }
 \arguments{
-\item{Q}{time series object. Net inflows to the reservoir.}
+\item{Q}{time series object. Net inflow to the reservoir.}
 
 \item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
 
