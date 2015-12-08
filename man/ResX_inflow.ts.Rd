@@ -14,7 +14,4 @@ Reservoir X inflow time series 1964 - 2014 (monthly)
 \examples{
 plot(ResX_inflow.ts)
 }
-\author{
-Sean Turner
-}
 
