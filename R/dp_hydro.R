@@ -1,4 +1,4 @@
-#' @title Dynamic Programming for Hydropower Reservoir YAY
+#' @title Dynamic Programming for Hydropower Reservoir
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 #' @param Q             vector or time series object. Net inflows to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
