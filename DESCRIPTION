@@ -5,6 +5,7 @@ Version: 1.0.0
 Date: 2015-07-23
 Authors@R: c(
     person("Sean", "Turner", , "swd.turner@gmail.com", c("aut", "cre")),
+    person("Ji Yi", "Ng", , "ngjiayi93@hotmail.com", "aut"),
     person("Stefano", "Galelli", , "stefano_galelli@sutd.edu.sg", "aut")
     )
 URL: https://github.com/swd-turner/reservoir

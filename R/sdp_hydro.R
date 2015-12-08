@@ -2,6 +2,7 @@
 #' @description Derives the optimal release policy based on storage state, inflow class and within-year period.
 #' @param Q             time series object. Net inflows to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q).
+#' @param capacity_live numerical. The live capacity.
 #' @param surface_area  numerical. The reservoir surface area
 #' @param hydro_cap     numerical. The hydropower plant electric capacity (MW)
 #' @param head          numerical. The maximum hydraulic head of the hydropower plant (m)
@@ -15,7 +16,6 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
-#' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
