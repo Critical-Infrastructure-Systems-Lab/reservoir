@@ -1,0 +1,20 @@
+citHeader("To cite package 'reservoir' in publications use:")
+
+citEntry(entry="Article",
+title = "Water supply sensitivity to climate change: An R package for implementing reservoir storage analysis in global and regional impact studies",
+author = "S.W.D. Turner and S. Galelli",
+journal = "Environmental Modelling & Software",
+volume = "76",
+pages = "13--19",
+year = "2016",
+doi = "10.1016/j.envsoft.2015.11.007",
+
+textVersion =
+         paste("Turner, S. W. D. and S. Galelli, (2016)",
+               "Water supply sensitivity to climate change: An R package for implementing reservoir storage analysis in global and regional impact studies",
+               "Environmental Modelling & Software. Volume 76, 13-19."))
+
+
+citFooter("The creation and maintenance of 'reservoir' is supported by the SUTD-MIT International Design Centre, Singapore.")
+         
+         
