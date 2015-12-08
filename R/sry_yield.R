@@ -7,8 +7,8 @@
 #' @param plot            logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param S_initial       numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
 #' @param max.iterations  Maximum number of iterations for yield computation.
-#' @param double_cycle  logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)
-#' @return Returns the storage behaviour time series for the no-failure (Rippl) reservoir given net inflows Q and target release R.
+#' @param double_cycle    logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)
+#' @return Returns yield of a reservoir with specified storage capacity and time-based reliability. 
 #' @examples # Compute yield for 0.95 reliability
 #' yield_ResX <- yield(ResX_inflow.ts, capacity = 100000, reliability = 0.95)
 #' # Compute yield for quarterly time series with seasonal demand profile
@@ -28,6 +28,10 @@ yield <- function(Q, capacity, reliability, profile = rep(1, frequency(Q)),
   
     if (double_cycle) {
         Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
+    }
+    
+    if (reliability == 1){
+      reliability <- 0.9999 # reliability of 1 allows convergence to stop at over-large storage
     }
   
     S <- vector("numeric", length = length(Q) + 1)

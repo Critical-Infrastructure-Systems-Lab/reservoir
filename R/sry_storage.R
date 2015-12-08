@@ -1,13 +1,13 @@
 #' @title Storage-Reliability-Yield (SRY) relationships: Storage computation
 #' @description Returns the required storage for given inflow time series, yield, and target time-based reliability. Assumes standard operating policy. Storage is computed iteratively using the bi-section method.
-#' @param Q            the net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.
-#' @param yield        numerical.  (must be same volumetric unit as Q and R).
-#' @param reliability  numerical.
+#' @param Q               time series or vector. The net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.
+#' @param yield           numerical.  (must be same volumetric unit as Q and R).
+#' @param reliability     numerical. The required time-based reliability.
 #' @param profile         a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.
 #' @param plot            logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param S_initial       numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
 #' @param max.iterations  Maximum number of iterations for yield computation.
-#' @param double_cycle  logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)
+#' @param double_cycle    logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)
 #' @return Returns the required storage capacity necessary to supply specified yield with specified reliability.
 #' @examples # Determine the required storage for 95 % reliability and yield equal to 80 % of the mean inflow.
 #' storage(ResX_inflow.ts, yield = 0.8*mean(ResX_inflow.ts), reliability = 0.95)
@@ -21,9 +21,11 @@ storage <- function(Q, yield, reliability, profile = rep(1, frequency(Q)),
         stop("Reliability must be between 0 and 1")
     if (length(yield) > 1)
         stop("yield must be a scalar, not a vector")
-  
     if (double_cycle) {
         Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
+    }
+    if (reliability == 1){
+      reliability <- 0.9999 # reliability of 1 allows convergence to stop at over-large storage
     }
   
     S <- vector("numeric", length = length(Q) + 1)

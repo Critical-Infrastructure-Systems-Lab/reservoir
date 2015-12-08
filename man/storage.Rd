@@ -8,11 +8,11 @@ storage(Q, yield, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
   S_initial = 1, max.iterations = 50, double_cycle = FALSE)
 }
 \arguments{
-\item{Q}{the net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.}
+\item{Q}{time series or vector. The net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.}
 
 \item{yield}{numerical.  (must be same volumetric unit as Q and R).}
 
-\item{reliability}{numerical.}
+\item{reliability}{numerical. The required time-based reliability.}
 
 \item{profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
 

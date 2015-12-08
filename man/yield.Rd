@@ -25,7 +25,7 @@ yield(Q, capacity, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
 \item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
 }
 \value{
-Returns the storage behaviour time series for the no-failure (Rippl) reservoir given net inflows Q and target release R.
+Returns yield of a reservoir with specified storage capacity and time-based reliability.
 }
 \description{
 Returns the yield for given inflow time series, reservoir capacity, and required time-based reliability. Assumes standard operating policy. Yield is computed iteratively using the bi-section method.
