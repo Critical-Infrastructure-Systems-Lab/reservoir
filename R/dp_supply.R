@@ -1,8 +1,12 @@
 #' @title Dynamic Programming
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 #' @param Q             vector or time series object. Net inflows to the reservoir.
+#' @param evap          vector or time series object. Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
+#' @param dep_vol_curve string. Defines the relationship between depth and volume of reservoir. Default = NULL (assumes linear relation between depth and volume).
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
+#' @param max_depth     numerical. The reservoir maximum depth.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
@@ -20,11 +24,39 @@
 #' @export
 dp_supply <- function(Q, capacity, target, S_disc = 1000,
                       R_disc = 10, loss_exp = 2, S_initial = 1,
+                      dep_vol_curve = "linear",
+                      max_depth = NULL, surface_area = NULL, evap = NULL,
                       plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
   }
+  
+  
+  f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
+  GetLevel <- function(f, V){
+    y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+    return(y)
+  }
+  GetArea <- function(f, V){
+    Ay <- 0.5 * (6 * V * f) ^ (2 / 3)
+    return(Ay)
+  }
+  
+  
+  ## KAVEH FUNCTION
+  ##N <- 2 * capacity / (max_depth * surface_area)
+  ##GetLevel <- function(N, ymax, V, Vmax){
+  ##  y <- ymax * (V / Vmax) ^ (N / 2)
+  ##  return(y)
+  ##}
+  ##GetArea <- function(N, y, ymax, Vmax){
+  ##  Ay <- ( (2 * Vmax) / (N * y)) * (y / ymax) ^ (2 / N)
+  ##  if(is.nan(Ay)==TRUE){
+  ##    Ay <- 0
+  ##  }
+  ##  return(Ay)
+  ##}
   
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
   R_disc_x <- seq(from = 0, to = target, by = target / R_disc)
@@ -41,7 +73,7 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   for (t in length(Q):1) {
     Cost_mat <- matrix(rep(R_costs, length(S_states)),
                        ncol = length(R_costs), byrow = TRUE)
-    Balance_mat <- State_mat + Q[t]
+    Balance_mat <- State_mat + Q[t] - evap[t] * GetArea(f, S_states)
     Cost_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat > capacity)] <- capacity
@@ -64,12 +96,13 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) *
                              (length(S_states) - 1)))
+    #message(GetArea(f, S[t]))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    if ( (S[t] - R[t] + Q[t]) > capacity) {
+    if ( (S[t] - R[t] + Q[t] - evap[t] * GetArea(f, S[t])) > capacity) {
       S[t + 1] <- capacity
-      Spill[t] <- S[t] - R[t] + Q[t] - capacity
+      Spill[t] <- S[t] - R[t] + Q[t] - capacity - evap[t] * GetArea(f, S[t])
     } else {
-      S[t + 1] <- S[t] - R[t] + Q[t]
+      S[t + 1] <- max(0, S[t] - R[t] + Q[t] - evap[t] * GetArea(f, S[t]))
     }
   }
   S <- ts(S[2:length(S)], start = start(Q), frequency = frequency(Q))
@@ -140,4 +173,4 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
     plot(Spill, ylab = "Uncontrolled spill")
   }
   return(results)
-} 
+}

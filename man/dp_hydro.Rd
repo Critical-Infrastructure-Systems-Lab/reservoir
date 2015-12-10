@@ -4,27 +4,38 @@
 \alias{dp_hydro}
 \title{Dynamic Programming for Hydropower Reservoir}
 \usage{
-dp_hydro(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
-  S_initial = 1, plot = TRUE, rep_rrv = FALSE)
+dp_hydro(Q, capacity, capacity_live, surface_area, hydro_cap, head, qmax, depth,
+  dep_vol_curve = "l", input_curve, S_disc = 1000, R_disc = 10,
+  S_initial = 1, plot = TRUE)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflows to the reservoir.}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
+\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q).}
 
-\item{target}{numerical. The target release constant.}
+\item{capacity_live}{numerical. The reservoir live capacity (must be the same volumetric unit as Q).}
+
+\item{surface_area}{numerical. The reservoir surface area}
+
+\item{hydro_cap}{numerical. The hydropower plant electric capacity (MW)}
+
+\item{head}{numerical. The maximum hydraulic head of the hydropower plant (m)}
+
+\item{qmax}{numerical. The maximum flow into the hydropower plant}
+
+\item{depth}{numerical. The reservoir maximum depth}
+
+\item{dep_vol_curve}{string. The relationship between depth and volume of reservoir.}
+
+\item{input_curve}{matrix of 3 columns: depth, area, volume}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
 \item{R_disc}{integer. Release discretization. Default = 10 divisions.}
 
-\item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
-
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
-
-\item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }
 \value{
 Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
