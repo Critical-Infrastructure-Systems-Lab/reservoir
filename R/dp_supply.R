@@ -4,9 +4,7 @@
 #' @param evap          vector or time series object. Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
-#' @param dep_vol_curve string. Defines the relationship between depth and volume of reservoir. Default = NULL (assumes linear relation between depth and volume).
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
-#' @param max_depth     numerical. The reservoir maximum depth.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
@@ -24,14 +22,24 @@
 #' @export
 dp_supply <- function(Q, capacity, target, S_disc = 1000,
                       R_disc = 10, loss_exp = 2, S_initial = 1,
-                      dep_vol_curve = "linear",
-                      max_depth = NULL, surface_area = NULL, evap = NULL,
+                      surface_area = NULL, evap = NULL,
                       plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
   }
   
+  if (is.null(surface_area) == TRUE && is.null(evap) == FALSE) {
+    stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
+  }
+  
+  if (is.null(evap) == TRUE) {
+    evap <- rep(0, length(Q))
+  }
+  
+  if (is.null(surface_area) == TRUE) {
+    surface_area <- 0
+  }
   
   f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
   GetLevel <- function(f, V){
@@ -42,7 +50,6 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
     Ay <- 0.5 * (6 * V * f) ^ (2 / 3)
     return(Ay)
   }
-  
   
   ## KAVEH FUNCTION
   ##N <- 2 * capacity / (max_depth * surface_area)
@@ -158,16 +165,18 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
       }
     }
     
-    results <- list(S, R, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
-    names(results) <- c("storage", "releases", "spill", "annual_reliability",
+    results <- list(S, R, A, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
+    names(results) <- c("storage", "releases", "surface_area", "water_level",
+                        "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "total_penalty_cost")
     
     
     
   } else {
-    results <- list(S, R, Spill, total_penalty)
-    names(results) <- c("storage", "releases", "spill", "total_penalty_cost")
+    results <- list(S, R, A, y, Spill, total_penalty)
+    names(results) <- c("storage", "releases", "surface_area",
+                        "water_level", "spill", "total_penalty_cost")
   }
   
   #===============================================================================
@@ -175,8 +184,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   
   if (plot) {
     plot(S, ylab = "Storage", ylim = c(0, capacity))
-    plot(A, ylab = "Surface Area", ylim = c(0, surface_area))
-    plot(y, ylab = "Water level")
+    #plot(A, ylab = "Surface Area", ylim = c(0, surface_area))
+    #plot(y, ylab = "Water level")
     plot(R, ylab = "Controlled release", ylim = c(0, target))
     plot(Spill, ylab = "Uncontrolled spill")
   }
