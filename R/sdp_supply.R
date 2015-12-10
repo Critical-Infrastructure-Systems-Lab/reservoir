@@ -1,8 +1,10 @@
 #' @title Stochastic Dynamic Programming
 #' @description Derives the optimal release policy based on storage state and within-year period only.
 #' @param Q             time series object. Net inflows to the reservoir.
+#' @param evap          vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
-#' @param target        numerical. The target release constant.  
+#' @param target        numerical. The target release constant.
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
@@ -23,7 +25,9 @@
 #' @export
 sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
                         Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                        loss_exp = 2, S_initial = 1, plot = TRUE, tol = 0.99,
+                        loss_exp = 2, S_initial = 1,
+                        surface_area = NULL, evap = NULL,
+                        plot = TRUE, tol = 0.99,
                         Markov = FALSE, rep_rrv = FALSE){
   
   frq <- frequency(Q)
@@ -38,6 +42,27 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     Q <- window(Q, end = c(end(Q)[1] - 1, frq), frequency = frq)
   }
   
+  
+  if (is.null(surface_area) == TRUE && is.null(evap) == FALSE) {
+    stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
+  }
+  if (is.null(evap) == TRUE) {
+    evap <- rep(0, frq)
+  }
+  if (is.null(surface_area) == TRUE) {
+    surface_area <- 0
+  }
+  f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
+  GetLevel <- function(f, V){
+    y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+    return(y)
+  }
+  GetArea <- function(f, V){
+    Ay <- 0.5 * (6 * V * f) ^ (2 / 3)
+    return(Ay)
+  }
+  
+  
   # SET UP (non-Markov)---------------------------------------------------------------------------
   
   if (Markov == FALSE){
@@ -50,8 +75,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     Shell.array <- array(0,dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
     R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Cost_to_go <- vector("numeric",length=length(S_states))
-    Results_mat <- matrix(0,nrow=length(S_states),ncol=12)
-    R_policy <- matrix(0,nrow=length(S_states),ncol=12)
+    Results_mat <- matrix(0,nrow=length(S_states),ncol=frq)
+    R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
     Bellman <- R_policy
     R_policy_test <- R_policy
     
@@ -101,7 +126,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     repeat{
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
-          sweep(Shell.array, 1, S_states, "+")                               
+          sweep(Shell.array, 1, S_states, "+") - 
+          sweep(Shell.array, 1, evap[t] * GetArea(f, S_states), "+")                              
         R.star[which(R.star > R.cstr)] <- NaN                              
         Deficit.arr <- (R.star - target) / target                                           
         Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
@@ -132,7 +158,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     repeat{
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
-          sweep(Shell.array, 1, S_states, "+")                               
+          sweep(Shell.array, 1, S_states, "+") -
+          sweep(Shell.array, 1, evap[t] * GetArea(f, S_states), "+")
         R.star[which(R.star > R.cstr)] <- NaN                              
         Deficit.arr <- (R.star - target) / target                                           
         Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
@@ -167,6 +194,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   
   S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
   R_rec <- vector("numeric",length(Q))
+  A <- vector("numeric", length(Q))
+  y <- vector("numeric", length(Q))
   Spill <- vector("numeric", length(Q))
   for (yr in 1:nrow(Q_month_mat)) {
     for (month in 1:frq) {
@@ -180,15 +209,17 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
         R <- R_disc_x[R_policy[S_state,Q_class,month]]
       }
       R_rec[t_index] <- R
-      if ( (S[t_index] - R + Qx) > capacity) {
+      A[t_index] <- GetArea(f, S[t_index])
+      y[t_index] <- GetLevel(f, S[t_index])
+      if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) > capacity) {
         S[t_index + 1] <- capacity
-        Spill[t_index] <- S[t_index] - R + Qx - capacity
+        Spill[t_index] <- S[t_index] - R + Qx - capacity - evap[month] * A[t_index]
       }else{
-        if ( (S[t_index] - R + Qx) < 0) {
+        if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) < 0) {
           S[t_index + 1] <- 0
-          R_rec[t_index] <- S[t_index] + Qx
+          R_rec[t_index] <- S[t_index] + Qx - evap[month] * A[t_index]
         }else{
-          S[t_index + 1] <- S[t_index] - R + Qx
+          S[t_index + 1] <- S[t_index] - R + Qx - evap[month] * A[t_index]
         }
       }
     }
@@ -196,6 +227,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
+  A <- ts(A, start = start(Q), frequency = frequency(Q))
+  y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frq)
   total_penalty <- sum( ( (target - R_rec) / target) ^ loss_exp)
   
@@ -247,17 +280,19 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     
     #===============================================================================
     
-    results <- list(R_policy, Bellman, S, R_rec, Spill, rel_ann, rel_time,
+    results <- list(R_policy, Bellman, S, R_rec, A, y, Spill, rel_ann, rel_time,
                     rel_vol, resilience, vulnerability, Q_disc, total_penalty)
-    names(results) <- c("release_policy", "Bellman", "storage", "releases", "spill", "annual_reliability",
+    names(results) <- c("release_policy", "Bellman", "storage", "releases",
+                        "surface_area","water_level", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "flow_disc", "total_penalty")
     
   
   } else {
-    results <- list(R_policy, Bellman, S, R_rec, Spill, Q_disc, total_penalty)
+    results <- list(R_policy, Bellman, S, R_rec, A, y, Spill, Q_disc, total_penalty)
     names(results) <- c("release_policy", "Bellman", "storage",
-                        "releases", "spill", "flow_disc", "total_penalty")
+                        "releases", "surface_area", "water_level",
+                        "spill", "flow_disc", "total_penalty")
   }
   
   return(results)

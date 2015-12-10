@@ -6,7 +6,8 @@
 \usage{
 sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
   0.2375, 0.475, 0.7125, 0.95, 1), loss_exp = 2, S_initial = 1,
-  plot = TRUE, tol = 0.99, Markov = FALSE, rep_rrv = FALSE)
+  surface_area = NULL, evap = NULL, plot = TRUE, tol = 0.99,
+  Markov = FALSE, rep_rrv = FALSE)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir.}
@@ -24,6 +25,10 @@ sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
 \item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
+
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
+
+\item{evap}{vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
