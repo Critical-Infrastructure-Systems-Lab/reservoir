@@ -92,13 +92,17 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   S <- vector("numeric", length(Q) + 1)
   S[1] <- S_initial * capacity
   R <- vector("numeric", length(Q))
+  A <- vector("numeric", length(Q))
+  y <- vector("numeric", length(Q))
   Spill <- vector("numeric", length(Q))
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) *
                              (length(S_states) - 1)))
     #message(GetArea(f, S[t]))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    if ( (S[t] - R[t] + Q[t] - evap[t] * GetArea(f, S[t])) > capacity) {
+    A[t] <- GetArea(f, S[t])
+    y[t] <- GetLevel(f, S[t])
+    if ( (S[t] - R[t] + Q[t] - evap[t] * A[t]) > capacity) {
       S[t + 1] <- capacity
       Spill[t] <- S[t] - R[t] + Q[t] - capacity - evap[t] * GetArea(f, S[t])
     } else {
@@ -107,6 +111,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   }
   S <- ts(S[2:length(S)], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
+  A <- ts(A, start = start(Q), frequency = frequency(Q))
+  y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   total_penalty <- sum( ( (target - R) / target) ^ loss_exp)
   # ===================================================================================
@@ -169,6 +175,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   
   if (plot) {
     plot(S, ylab = "Storage", ylim = c(0, capacity))
+    plot(A, ylab = "Surface Area", ylim = c(0, surface_area))
+    plot(y, ylab = "Water level")
     plot(R, ylab = "Controlled release", ylim = c(0, target))
     plot(Spill, ylab = "Uncontrolled spill")
   }
