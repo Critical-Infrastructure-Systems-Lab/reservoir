@@ -83,6 +83,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
     Balance_mat <- State_mat + Q[t] - evap[t] * GetArea(f, S_states)
     Cost_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat < 0)] <- NaN
+    Cost_mat[which(is.nan(Balance_mat[,1]))] <- 0           ## Correction to allow zero release under high evap
+    Balance_mat[which(is.nan(Balance_mat[,1]))] <- 0        ## Correction to allow zero release under high evap
     Balance_mat[which(Balance_mat > capacity)] <- capacity
     Implied_S_state <- round(1 + ((Balance_mat / capacity) *
                                     (length(S_states) - 1)))

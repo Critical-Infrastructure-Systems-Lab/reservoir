@@ -4,30 +4,26 @@
 \alias{dp_hydro}
 \title{Dynamic Programming for Hydropower Reservoir}
 \usage{
-dp_hydro(Q, capacity, capacity_live, surface_area, hydro_cap, head, qmax, depth,
-  dep_vol_curve = "l", input_curve, S_disc = 1000, R_disc = 10,
+dp_hydro(Q, capacity, capacity_live = capacity, surface_area, installed_cap,
+  head, qmax, efficiency = 0.9, S_disc = 1000, R_disc = 10,
   S_initial = 1, plot = TRUE)
 }
 \arguments{
-\item{Q}{vector or time series object. Net inflows to the reservoir.}
+\item{Q}{time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q).}
+\item{capacity}{numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.}
 
-\item{capacity_live}{numerical. The reservoir live capacity (must be the same volumetric unit as Q).}
+\item{capacity_live}{numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.}
 
-\item{surface_area}{numerical. The reservoir surface area}
+\item{surface_area}{numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.}
 
-\item{hydro_cap}{numerical. The hydropower plant electric capacity (MW)}
+\item{installed_cap}{numerical. The hydropower plant electric capacity (MW).}
 
-\item{head}{numerical. The maximum hydraulic head of the hydropower plant (m)}
+\item{head}{numerical. The maximum hydraulic head of the hydropower plant (m).}
 
 \item{qmax}{numerical. The maximum flow into the hydropower plant}
 
-\item{depth}{numerical. The reservoir maximum depth}
-
-\item{dep_vol_curve}{string. The relationship between depth and volume of reservoir.}
-
-\item{input_curve}{matrix of 3 columns: depth, area, volume}
+\item{efficiency}{numerical. The hydropower plant efficiency. Default = 0.9.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 

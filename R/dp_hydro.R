@@ -1,15 +1,13 @@
 #' @title Dynamic Programming for Hydropower Reservoir
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
-#' @param Q             vector or time series object. Net inflows to the reservoir.
-#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q).
-#' @param capacity_live numerical. The reservoir live capacity (must be the same volumetric unit as Q).
-#' @param surface_area  numerical. The reservoir surface area
-#' @param hydro_cap     numerical. The hydropower plant electric capacity (MW)
-#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m)
+#' @param Q             time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.
+#' @param capacity      numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.
+#' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
+#' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
+#' @param installed_cap numerical. The hydropower plant electric capacity (MW).
+#' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
+#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
 #' @param qmax          numerical. The maximum flow into the hydropower plant
-#' @param depth         numerical. The reservoir maximum depth
-#' @param dep_vol_curve string. The relationship between depth and volume of reservoir.
-#' @param input_curve   matrix of 3 columns: depth, area, volume
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
@@ -23,33 +21,48 @@
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @import stats 
 #' @export
-dp_hydro <- function(Q, capacity, capacity_live, surface_area, hydro_cap, head, qmax, depth,
-                     dep_vol_curve = "l", input_curve, 
-                     S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE) {
+dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, installed_cap, head, qmax,
+                     efficiency = 0.9, S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE) {
   
-  if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
-    stop("Q must be time series or vector object")
+  
+  if (is.ts(Q) == FALSE) {
+    stop("Q must be time series object")
   }
   
-  if ( dep_vol_curve == "n") { 
-    N <- 2 * capacity / (depth * surface_area)
-  } else if ( dep_vol_curve == "f") {
-    f <- sqrt(2) / 3 * (surface_area*10^6) ^ (3/2) / (capacity*10^6)
+  if (missing(head) && missing(qmax)) {
+    stop("You must enter a value for either head or qmax")
   }
   
-  if (!missing(input_curve)){
-    colnames(input_curve) <- c("depth", "area", "volume")
+  if (!missing(head) && !missing(qmax) && missing(efficiency)) {
+    efficiency <- installed_cap / (9.81 * 1000 * head * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+    if (efficiency > 1) {
+      warning("Check head, qmax and installed_cap: calculated efficiency exceeds 100 %")
+    }
+  }
+
+  if (missing(head)) {
+    head <- installed_cap / (efficiency * 9.81 * 1000 * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+  }
+
+  if (missing(qmax)) {
+    qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frequency(Q)) * 24 * 60 * 60)
   }
   
-  S_states <- seq(from = capacity - capacity_live, to = capacity, by = capacity_live / S_disc)
+    f <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3 / 2) / (capacity * 10 ^ 6)
+    GetLevel <- function(f, V){
+      y <- (6 * (V * 1000000) / (f ^ 2)) ^ (1 / 3)
+      return(y)
+    }
+    GetArea <- function(f, V){
+      Ay <- 0.5 * (6 * V * f) ^ (2 / 3)
+      return(Ay)
+    }
+    
+  ymax <- GetLevel(f, capacity)
+  yconst <- head - ymax
   
-  if ( !missing(qmax) ) {
-    R_max <- qmax
-  } else {
-    R_max <- hydro_cap * 10^6 / (1000 * 9.81 * head) * (365/12 * 24 * 60 * 60) / 10^6 #10^6 m3/month
-  }
-  
-  R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
+  S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
+  R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat <- apply(State_mat, 2, "+", S_states)
   State_mat <- t(apply(State_mat, 1, "-", R_disc_x))
@@ -65,22 +78,15 @@ dp_hydro <- function(Q, capacity, capacity_live, surface_area, hydro_cap, head, 
     Balance_mat <- State_mat + Q[t]
     Release_mat[which(Balance_mat < (capacity - capacity_live))] <- NaN
     Balance_mat[which(Balance_mat < (capacity - capacity_live))] <- NaN
+    
+    Release_mat[which(is.nan(Balance_mat[,1]))] <- 0           ## Correction to allow zero release under high evap
+    Balance_mat[which(is.nan(Balance_mat[,1]))] <- capacity - capacity_live        ## Correction to allow zero release under high evap
+    
     Balance_mat[which(Balance_mat > capacity)] <- capacity
-    Implied_S_state <- round(1 + ( ((Balance_mat - (capacity - capacity_live)) / (capacity_live)) *
-                                     (length(S_states) - 1)))
-    if ( dep_vol_curve == "l"){
-      H_mat <- (Balance_mat + S_states) / 2 / surface_area 
-    } else if ( dep_vol_curve == "f") {
-      H_mat <- ( 6 * (Balance_mat + S_states) * 10^6 / 2 / f^2 ) ^ (1/3)
-    } else if ( dep_vol_curve == "n") {
-      H_mat <- depth * ( (Balance_mat + S_states) / 2 / capacity ) ^ (N/2)
-    } else if ( dep_vol_curve == "u") {
-      H_mat <-  matrix(sapply( ((Balance_mat + S_states) * 10^6 / 2), 
-                               function (x) 
-                                 ifelse(is.nan(x), NaN, input_curve$depth[ which.min(abs( input_curve$volume - x )) ]) ), 
-                       nrow = length(S_states), ncol = length(R_disc_x))
-    }
-    Rev_mat <- Release_mat * H_mat 
+    Implied_S_state <- round(1 + ((Balance_mat / capacity) * (length(S_states) - 1)))
+    
+    H_mat <- GetLevel(f, (Balance_mat + S_states) / 2) + yconst
+    Rev_mat <- Release_mat * H_mat
     Rev_mat2 <- Rev_mat + matrix(Rev_to_go[Implied_S_state],
                                  nrow = length(S_states))
     Rev_to_go <- apply(Rev_mat2, 1, max, na.rm = TRUE)
@@ -92,30 +98,34 @@ dp_hydro <- function(Q, capacity, capacity_live, surface_area, hydro_cap, head, 
   # POLICY SIMULATION------------------------------------------------------------------
   
   S <- vector("numeric", length(Q) + 1)
-  S[1] <- S_initial * capacity_live + (capacity - capacity_live)
+  S[1] <- S_initial * capacity
   R <- vector("numeric", length(Q))
+  Power <- vector("numeric", length(Q))
   for (t in 1:length(Q)) {
-    S_state <- round(1 + ( ((S[t] - (capacity - capacity_live))/ capacity_live) *
-                             (length(S_states) - 1)))
+    S_state <- round(1 + ( (S[t] / capacity) * (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
     if ( (S[t] - R[t] + Q[t]) > capacity) {
       S[t + 1] <- capacity
     } else {
-      S[t + 1] <- S[t] - R[t] + Q[t]
+      S[t + 1] <- max(0, S[t] - R[t] + Q[t])
     }
+    Power[t] <- efficiency * 1000 * 9.81 * (GetLevel(f, mean(S[t:t+1])) + yconst) * R[t] / (365.25 / frequency(Q) * 24 * 60 * 60)
+    
   }
+
   S <- ts(S[2:length(S)], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
-  
-  results <- list(S, R)
-  names(results) <- c("storage", "releases")
+  Power <- ts(Power, start = start(Q), frequency = frequency(Q))
+  Energy_MWh <- sum(Power * (365.25 / 12) * 24)
+  results <- list(S, R, Power, Bellman, R_policy, Energy_MWh)
+  names(results) <- c("Storage_Mm^3", "Release_Mm^3", "Power_MW", "Bellman", "R_policy", "Total_Energy_MWh")
   
   # ===================================================================================
   
   if (plot) {
-    plot(S, ylab = "storage", ylim = c(0, capacity))
-    plot(R, ylab = "release/inflow", ylim = c(0, R_max))
-    lines(Q, col="pink")
+    plot(S, ylab = "Storage", ylim = c(0, capacity))
+    plot(R, ylab = "Release through turbine", ylim = c(0, qmax))
+    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
   }
   return(results)
 } 
