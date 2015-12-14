@@ -5,7 +5,7 @@
 \title{Dynamic Programming}
 \usage{
 dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
-  S_initial = 1, surface_area = NULL, evap = NULL, plot = TRUE,
+  S_initial = 1, surface_area, max_depth, evap, plot = TRUE,
   rep_rrv = FALSE)
 }
 \arguments{
@@ -24,6 +24,8 @@ dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
 \item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
+
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
 
 \item{evap}{vector or time series object. Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
 

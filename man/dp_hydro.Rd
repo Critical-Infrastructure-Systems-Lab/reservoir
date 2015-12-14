@@ -5,7 +5,7 @@
 \title{Dynamic Programming for Hydropower Reservoir}
 \usage{
 dp_hydro(Q, capacity, capacity_live = capacity, surface_area, installed_cap,
-  head, qmax, efficiency = 0.9, S_disc = 1000, R_disc = 10,
+  head, qmax, max_depth, efficiency = 0.9, S_disc = 1000, R_disc = 10,
   S_initial = 1, plot = TRUE)
 }
 \arguments{
@@ -22,6 +22,8 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, installed_cap,
 \item{head}{numerical. The maximum hydraulic head of the hydropower plant (m).}
 
 \item{qmax}{numerical. The maximum flow into the hydropower plant}
+
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
 
 \item{efficiency}{numerical. The hydropower plant efficiency. Default = 0.9.}
 

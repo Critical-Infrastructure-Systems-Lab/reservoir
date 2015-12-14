@@ -5,6 +5,7 @@
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
@@ -26,7 +27,7 @@
 sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
                         Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
                         loss_exp = 2, S_initial = 1,
-                        surface_area = NULL, evap = NULL,
+                        surface_area, max_depth, evap,
                         plot = TRUE, tol = 0.99,
                         Markov = FALSE, rep_rrv = FALSE){
   
@@ -42,26 +43,16 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     Q <- window(Q, end = c(end(Q)[1] - 1, frq), frequency = frq)
   }
   
-  
-  if (is.null(surface_area) == TRUE && is.null(evap) == FALSE) {
+  if (missing(surface_area) && !missing(evap)) {
     stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
   }
-  if (is.null(evap) == TRUE) {
-    evap <- rep(0, frq)
+  if (missing(evap)) {
+    evap <- rep(0, length(Q))
   }
-  if (is.null(surface_area) == TRUE) {
+  if (missing(surface_area)) {
     surface_area <- 0
   }
-  f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
-  GetLevel <- function(f, V){
-    y <- (6 * V / (f ^ 2)) ^ (1 / 3)
-    return(y)
-  }
-  GetArea <- function(f, V){
-    Ay <- 0.5 * (6 * V * f) ^ (2 / 3)
-    return(Ay)
-  }
-  
+
   
   # SET UP (non-Markov)---------------------------------------------------------------------------
   
@@ -79,6 +70,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
     Bellman <- R_policy
     R_policy_test <- R_policy
+    
     
   # SET UP (Markov)-------------------------------------------------------------------------------  
     
@@ -118,6 +110,36 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     R_policy_test <- R_policy
   }
   
+  
+  # SET UP (storage-depth-area relationships)----------------------------------------------------- 
+  
+  if (missing(max_depth)){
+    f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
+    GetLevelf <- function(f, V){
+      y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+      return(y)
+    }
+    GetAreaf <- function(f, V){
+      Ay <- ((3 * V * f) / (sqrt(2))) ^ (2 / 3)
+      return(Ay)
+    }
+    S_area_rel <- GetAreaf(f, S_states)
+  } else {
+    N <- 2 * capacity / (max_depth * surface_area)
+    GetLevelN <- function(N, V){
+      y <- max_depth * (V / capacity) ^ (N / 2)
+      return(y)
+    }
+    GetAreaN <- function(N, V){
+      #Ay <- ( (2 * Vmax) / (N * y)) * (y / ymax) ^ (2 / N)
+      Ay <- ((2 * capacity) / (N * max_depth * (V / capacity) ^ (N / 2))) * ((V / capacity) ^ (N / 2)) ^ (2 / N)
+      Ay[which(is.nan(Ay) == TRUE)] <- 0
+      return(Ay)
+    }
+    S_area_rel <- GetAreaN(N, V = S_states)
+  }
+  
+  
   message(paste0("policy converging... (>", tol,")"))
   
   # POLICY OPTIMIZATION (non-Markov)-------------------------------------------------------------
@@ -127,11 +149,14 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") - 
-          sweep(Shell.array, 1, evap[t] * GetArea(f, S_states), "+")                              
-        R.star[which(R.star > R.cstr)] <- NaN                              
+          sweep(Shell.array, 1, evap[t] * S_area_rel, "+")
+        R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
+        #R.star[which(R.star > R.cstr)] <- NaN
+        #R.star[,1,][which(is.nan(R.star[,1,])==TRUE)] <- 0 # Ensure lowest release of zero is always allowed
         Deficit.arr <- (R.star - target) / target                                           
         Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
         S.t_plus_1 <- R.cstr - R.star
+        S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
         Implied_S_state <- round(1 + (S.t_plus_1 / capacity)
                                  * (length(S_states) - 1))
         Implied_S_state[which(Implied_S_state > length(S_states))] <- length(S_states)
@@ -159,11 +184,13 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") -
-          sweep(Shell.array, 1, evap[t] * GetArea(f, S_states), "+")
-        R.star[which(R.star > R.cstr)] <- NaN                              
+          sweep(Shell.array, 1, evap[t] * S_area_rel, "+")
+        R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
+        #R.star[which(R.star > R.cstr)] <- NaN                              
         Deficit.arr <- (R.star - target) / target                                           
         Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
         S.t_plus_1 <- R.cstr - R.star
+        S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
         Implied_S_state <- round(1 + (S.t_plus_1 / capacity)
                                  * (length(S_states) - 1))
         Implied_S_state[which(Implied_S_state > length(S_states))] <- length(S_states)
@@ -209,15 +236,24 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
         R <- R_disc_x[R_policy[S_state,Q_class,month]]
       }
       R_rec[t_index] <- R
-      A[t_index] <- GetArea(f, S[t_index])
-      y[t_index] <- GetLevel(f, S[t_index])
+      #A[t_index] <- GetArea(f, S[t_index])
+      #y[t_index] <- GetLevel(f, S[t_index])
+      
+      if (missing(max_depth)){
+        A[t_index] <- GetAreaf(f, S[t_index])
+        y[t_index] <- GetLevelf(f, S[t_index])
+      } else {
+        A[t_index] <- GetAreaN(N, V = S[t_index])
+        y[t_index] <- GetLevelN(N, V = S[t_index])
+      }
+      
       if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) > capacity) {
         S[t_index + 1] <- capacity
         Spill[t_index] <- S[t_index] - R + Qx - capacity - evap[month] * A[t_index]
       }else{
         if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) < 0) {
           S[t_index + 1] <- 0
-          R_rec[t_index] <- S[t_index] + Qx - evap[month] * A[t_index]
+          R_rec[t_index] <- max(0, S[t_index] + Qx - evap[month] * A[t_index])
         }else{
           S[t_index + 1] <- S[t_index] - R + Qx - evap[month] * A[t_index]
         }
@@ -225,7 +261,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     }
   }
   R_policy <- (R_policy - 1) / R_disc
-  S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
+  S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   A <- ts(A, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))
