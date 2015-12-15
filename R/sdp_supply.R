@@ -34,6 +34,16 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")
   if (frq != 12 && frq != 4) stop("Q must have frequency of 4 or 12")  
+  
+  if (missing(evap)) {
+    evap <- ts(rep(0, length(Q)), start = start(Q), frequency = frq)
+  }
+  if(length(evap) == 1) {
+    evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frq)
+  }
+  if (length(evap) != length(Q) && length(evap) != frq){
+    stop("Evaporation must be either a time series of length Q, a vector of length frequency(Q), or a single numeric constant")
+  }
   if (start(Q)[2] != 1){
     message("NOTE: First incomplete year of time series removed")
     Q <- window(Q, start = c(start(Q)[1] + 1, 1), frequency = frq)
@@ -42,17 +52,22 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     message("NOTE: Final incomplete year of time series removed")
     Q <- window(Q, end = c(end(Q)[1] - 1, frq), frequency = frq)
   }
+  if (length(evap) == frq){
+    evap <- ts(rep(evap, length(Q) / frq), start = start(Q), frequency = frq)
+  } else {
+    if(is.ts(evap)==FALSE) stop("Evaporation must be either a time series of length Q or a vector of length frequency(Q) for a seasonal evaporation profile")
+    evap <- window(evap, start = start(Q), end = end(Q), frequency = frq)
+  }
   
   if (missing(surface_area) && !missing(evap)) {
     stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
   }
-  if (missing(evap)) {
-    evap <- rep(0, length(Q))
-  }
+
   if (missing(surface_area)) {
     surface_area <- 0
   }
 
+  evap_seas <- as.vector(tapply(evap, cycle(evap), FUN = mean))
   
   # SET UP (non-Markov)---------------------------------------------------------------------------
   
@@ -114,30 +129,29 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   # SET UP (storage-depth-area relationships)----------------------------------------------------- 
   
   if (missing(max_depth)){
-    f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
-    GetLevelf <- function(f, V){
-      y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+    c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- (6 * V / (c ^ 2)) ^ (1 / 3)
       return(y)
     }
-    GetAreaf <- function(f, V){
-      Ay <- ((3 * V * f) / (sqrt(2))) ^ (2 / 3)
+    GetArea <- function(c, V){
+      Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
       return(Ay)
     }
-    S_area_rel <- GetAreaf(f, S_states)
   } else {
-    N <- 2 * capacity / (max_depth * surface_area)
-    GetLevelN <- function(N, V){
-      y <- max_depth * (V / capacity) ^ (N / 2)
+    c <- 2 * capacity / (max_depth * surface_area)
+    GetLevel <- function(c, V){
+      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
       return(y)
     }
-    GetAreaN <- function(N, V){
-      #Ay <- ( (2 * Vmax) / (N * y)) * (y / ymax) ^ (2 / N)
-      Ay <- ((2 * capacity) / (N * max_depth * (V / capacity) ^ (N / 2))) * ((V / capacity) ^ (N / 2)) ^ (2 / N)
+    GetArea <- function(c, V){
+      Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
       Ay[which(is.nan(Ay) == TRUE)] <- 0
       return(Ay)
     }
-    S_area_rel <- GetAreaN(N, V = S_states)
   }
+  
+  S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
   
   
   message(paste0("policy converging... (>", tol,")"))
@@ -149,7 +163,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") - 
-          sweep(Shell.array, 1, evap[t] * S_area_rel, "+")
+          sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
         #R.star[which(R.star > R.cstr)] <- NaN
         #R.star[,1,][which(is.nan(R.star[,1,])==TRUE)] <- 0 # Ensure lowest release of zero is always allowed
@@ -184,7 +198,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
       for (t in frq:1){
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") -
-          sweep(Shell.array, 1, evap[t] * S_area_rel, "+")
+          sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
         #R.star[which(R.star > R.cstr)] <- NaN                              
         Deficit.arr <- (R.star - target) / target                                           
@@ -221,7 +235,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   
   S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
   R_rec <- vector("numeric",length(Q))
-  A <- vector("numeric", length(Q))
+  E <- vector("numeric", length(Q))
   y <- vector("numeric", length(Q))
   Spill <- vector("numeric", length(Q))
   for (yr in 1:nrow(Q_month_mat)) {
@@ -236,26 +250,21 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
         R <- R_disc_x[R_policy[S_state,Q_class,month]]
       }
       R_rec[t_index] <- R
-      #A[t_index] <- GetArea(f, S[t_index])
-      #y[t_index] <- GetLevel(f, S[t_index])
       
-      if (missing(max_depth)){
-        A[t_index] <- GetAreaf(f, S[t_index])
-        y[t_index] <- GetLevelf(f, S[t_index])
-      } else {
-        A[t_index] <- GetAreaN(N, V = S[t_index])
-        y[t_index] <- GetLevelN(N, V = S[t_index])
-      }
+
+        E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+        y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
+
       
-      if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) > capacity) {
+      if ( (S[t_index] - R + Qx - E[t_index]) > capacity) {
         S[t_index + 1] <- capacity
-        Spill[t_index] <- S[t_index] - R + Qx - capacity - evap[month] * A[t_index]
+        Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]
       }else{
-        if ( (S[t_index] - R + Qx - evap[month] * A[t_index]) < 0) {
+        if ( (S[t_index] - R + Qx - E[t_index]) < 0) {
           S[t_index + 1] <- 0
-          R_rec[t_index] <- max(0, S[t_index] + Qx - evap[month] * A[t_index])
+          R_rec[t_index] <- max(0, S[t_index] + Qx - E[t_index])
         }else{
-          S[t_index + 1] <- S[t_index] - R + Qx - evap[month] * A[t_index]
+          S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
         }
       }
     }
@@ -263,7 +272,7 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
-  A <- ts(A, start = start(Q), frequency = frequency(Q))
+  E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frq)
   total_penalty <- sum( ( (target - R_rec) / target) ^ loss_exp)
@@ -316,18 +325,18 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     
     #===============================================================================
     
-    results <- list(R_policy, Bellman, S, R_rec, A, y, Spill, rel_ann, rel_time,
+    results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, rel_ann, rel_time,
                     rel_vol, resilience, vulnerability, Q_disc, total_penalty)
     names(results) <- c("release_policy", "Bellman", "storage", "releases",
-                        "surface_area","water_level", "spill", "annual_reliability",
+                        "evap_loss","water_level", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "flow_disc", "total_penalty")
     
   
   } else {
-    results <- list(R_policy, Bellman, S, R_rec, A, y, Spill, Q_disc, total_penalty)
+    results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, Q_disc, total_penalty)
     names(results) <- c("release_policy", "Bellman", "storage",
-                        "releases", "surface_area", "water_level",
+                        "releases", "evap_loss", "water_level",
                         "spill", "flow_disc", "total_penalty")
   }
   

@@ -52,38 +52,38 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   
+  
   if (missing(max_depth)){
-    f <- sqrt(2) / 3 * (surface_area) ^ (3/2) / (capacity)
-    GetLevelf <- function(f, V){
-      y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+    c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- (6 * V / (c ^ 2)) ^ (1 / 3)
       return(y)
     }
-    GetAreaf <- function(f, V){
-      Ay <- ((3 * V * f) / (sqrt(2))) ^ (2 / 3)
+    GetArea <- function(c, V){
+      Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
       return(Ay)
     }
-    S_area_rel <- GetAreaf(f, S_states)
   } else {
-    N <- 2 * capacity / (max_depth * surface_area)
-    GetLevelN <- function(N, V){
-      y <- max_depth * (V / capacity) ^ (N / 2)
+    c <- 2 * capacity / (max_depth * surface_area)
+    GetLevel <- function(c, V){
+      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
       return(y)
     }
-    GetAreaN <- function(N, V){
-      #Ay <- ( (2 * Vmax) / (N * y)) * (y / ymax) ^ (2 / N)
-      Ay <- ((2 * capacity) / (N * max_depth * (V / capacity) ^ (N / 2))) * ((V / capacity) ^ (N / 2)) ^ (2 / N)
+    GetArea <- function(c, V){
+      Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
       Ay[which(is.nan(Ay) == TRUE)] <- 0
       return(Ay)
     }
-    S_area_rel <- GetAreaN(N, V = S_states)
   }
-  
+
+  S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
+
   # POLICY OPTIMIZATION----------------------------------------------------------------
   
   for (t in length(Q):1) {
     Cost_mat <- matrix(rep(R_costs, length(S_states)),
                        ncol = length(R_costs), byrow = TRUE)
-    Balance_mat <- State_mat + Q[t] - evap[t] * S_area_rel
+    Balance_mat <- State_mat + Q[t] - (evap[t] * S_area_rel / 10 ^ 6)
     Cost_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat < 0)] <- NaN
     Cost_mat[which(is.nan(Balance_mat[,1]))] <- 0           ## Correction to allow zero release under high evap
@@ -104,31 +104,26 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   S <- vector("numeric", length(Q) + 1)
   S[1] <- S_initial * capacity
   R <- vector("numeric", length(Q))
-  A <- vector("numeric", length(Q))
+  E <- vector("numeric", length(Q))
   y <- vector("numeric", length(Q))
   Spill <- vector("numeric", length(Q))
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) *
                              (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    if (missing(max_depth)){
-      A[t] <- GetAreaf(f, S[t])
-      y[t] <- GetLevelf(f, S[t])
-    } else {
-      A[t] <- GetAreaN(N, V = S[t])
-      y[t] <- GetLevelN(N,V = S[t])
-    }
+    E[t] <- GetArea(c, S[t] * 10 ^ 6) * evap[t] / 10 ^ 6  # Convert to Mm3
+    y[t] <- GetLevel(c, S[t] * 10 ^ 6)
 
-    if ( (S[t] - R[t] + Q[t] - evap[t] * A[t]) > capacity) {
+    if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {
       S[t + 1] <- capacity
-      Spill[t] <- S[t] - R[t] + Q[t] - capacity - evap[t] * A[t]
+      Spill[t] <- S[t] - R[t] + Q[t] - capacity - E[t]
     } else {
-      S[t + 1] <- max(0, S[t] - R[t] + Q[t] - evap[t] * A[t])
+      S[t + 1] <- max(0, S[t] - R[t] + Q[t] - E[t])
     }
   }
   S <- ts(S[1:length(S) - 1], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
-  A <- ts(A, start = start(Q), frequency = frequency(Q))
+  E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   total_penalty <- sum( ( (target - R) / target) ^ loss_exp)
@@ -175,8 +170,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
       }
     }
     
-    results <- list(S, R, A, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
-    names(results) <- c("storage", "releases", "surface_area", "water_level",
+    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
+    names(results) <- c("storage", "releases", "evap_loss", "water_level",
                         "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "total_penalty_cost")
@@ -184,8 +179,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
     
     
   } else {
-    results <- list(S, R, A, y, Spill, total_penalty)
-    names(results) <- c("storage", "releases", "surface_area",
+    results <- list(S, R, E, y, Spill, total_penalty)
+    names(results) <- c("storage", "releases", "evap_loss",
                         "water_level", "spill", "total_penalty_cost")
   }
   
@@ -194,8 +189,6 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   
   if (plot) {
     plot(S, ylab = "Storage", ylim = c(0, capacity))
-    #plot(A, ylab = "Surface Area", ylim = c(0, surface_area))
-    #plot(y, ylab = "Water level")
     plot(R, ylab = "Controlled release", ylim = c(0, target))
     plot(Spill, ylab = "Uncontrolled spill")
   }

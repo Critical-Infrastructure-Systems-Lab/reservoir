@@ -5,10 +5,11 @@
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
 #' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param evap          vector or time series object. Pan evaporation, in units m. Varies with reservroi surface area..
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
 #' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
 #' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
-#' @param qmax          numerical. The maximum flow into the hydropower plant
+#' @param qmax          numerical. The maximum flow into the hydropower plant.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
@@ -22,8 +23,9 @@
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @import stats 
 #' @export
-dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, installed_cap, head, qmax,
-                     max_depth, efficiency = 0.9, S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE) {
+dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
+                     installed_cap, head, qmax, max_depth, efficiency = 0.9,
+                     S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE) {
   
   if (is.ts(Q) == FALSE) {
     stop("Q must be time series object")
@@ -43,7 +45,11 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, instal
   if (missing(qmax)) {
     qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frequency(Q)) * 24 * 60 * 60)
   }
-  message(head)
+  
+  if (missing(evap)) {
+    evap <- rep(0, length(Q))
+  }
+  
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
   R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
@@ -54,50 +60,44 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, instal
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   
   if (missing(max_depth)){
-    f <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
-    GetLevelf <- function(f, V){
-      y <- (6 * V / (f ^ 2)) ^ (1 / 3)
+    c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- (6 * V / (c ^ 2)) ^ (1 / 3)
       return(y)
     }
-    GetAreaf <- function(f, V){
-      Ay <- (((3 * f * V) / (sqrt(2))) ^ (2 / 3)) / 1000000
+    GetArea <- function(c, V){
+      Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
       return(Ay)
     }
-    yconst <- head - GetLevelf(f, capacity * 10 ^ 6)
+    yconst <- head - GetLevel(c, capacity * 10 ^ 6)
   } else {
-    N <- 2 * capacity / (max_depth * surface_area)
-    GetLevelN <- function(N, V){
-      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (N / 2)
+    c <- 2 * (capacity * 10 ^ 6) / (max_depth * surface_area * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
       return(y)
     }
-    GetAreaN <- function(N, V){
-      #Ay <- ( (2 * Vmax) / (N * y)) * (y / ymax) ^ (2 / N)
-      Ay <- ((2 * (capacity)) / (N * max_depth * (V / (capacity * 10 ^ 6)) ^ (N / 2))) * ((V / (capacity * 10 ^ 6)) ^ (N / 2)) ^ (2 / N)
+    GetArea <- function(c, V){
+      Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
       Ay[which(is.nan(Ay) == TRUE)] <- 0
       return(Ay)
     }
     yconst <- head - max_depth
   }
   
-  
+  S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
+
   # POLICY OPTIMIZATION----------------------------------------------------------------
   
   for (t in length(Q):1) {
     Release_mat <- matrix(rep(R_disc_x, length(S_states)),
                           ncol = length(R_disc_x), byrow = TRUE)
-    Balance_mat <- State_mat + Q[t]
-    Release_mat[which(Balance_mat < (capacity - capacity_live))] <- NaN
-    Balance_mat[which(Balance_mat < (capacity - capacity_live))] <- NaN
-    Release_mat[which(is.nan(Balance_mat[,1]))] <- 0           ## Correction to allow zero release under high evap
-    Balance_mat[which(is.nan(Balance_mat[,1]))] <- capacity - capacity_live        ## Correction to allow zero release under high evap
+    Balance_mat <- State_mat + Q[t] - (evap[t] * S_area_rel / 10 ^ 6)
+    Release_mat[, 2:ncol(Balance_mat)][which(Balance_mat[, 2:ncol(Balance_mat)] < (capacity - capacity_live))] <- NaN
+    Balance_mat[, 2:ncol(Balance_mat)][which(Balance_mat[, 2:ncol(Balance_mat)] < (capacity - capacity_live))] <- NaN
+    Balance_mat[which(Balance_mat < 0)] <- 0
     Balance_mat[which(Balance_mat > capacity)] <- capacity
     Implied_S_state <- round(1 + ((Balance_mat / capacity) * (length(S_states) - 1)))
-    
-    if (missing(max_depth)){
-      H_mat <- GetLevelf(f, ((Balance_mat + S_states) * (10 ^ 6))  / 2) + yconst
-    } else {
-      H_mat <- GetLevelN(N, V = ((Balance_mat + S_states) * (10 ^ 6)) / 2) + yconst
-    }
+    H_mat <- GetLevel(c, ((Balance_mat + S_states) * (10 ^ 6))  / 2) + yconst
     Rev_mat <- Release_mat * H_mat
     Rev_mat2 <- Rev_mat + matrix(Rev_to_go[Implied_S_state],
                                  nrow = length(S_states))
@@ -112,45 +112,42 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, instal
   S <- vector("numeric", length(Q) + 1)
   S[1] <- S_initial * capacity
   R <- vector("numeric", length(Q))
-  A <- vector("numeric", length(Q))
+  E <- vector("numeric", length(Q))
   y <- vector("numeric", length(Q))
+  Spill <- vector("numeric", length(Q))
   Power <- vector("numeric", length(Q))
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) * (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    if ( (S[t] - R[t] + Q[t]) > capacity) {
-      S[t + 1] <- capacity
-    } else {
-      S[t + 1] <- max(0, S[t] - R[t] + Q[t])
-    }
+    E[t] <- GetArea(c, S[t] * (10 ^ 6)) * evap[t] / 10 ^ 6
+    y[t] <- GetLevel(c, S[t] * (10 ^ 6))
     
-    if(missing(max_depth)){
-      A[t] <- GetAreaf(f, S[t] * (10 ^ 6))
-      y[t] <- GetLevelf(f, S[t] * (10 ^ 6))
-      Power[t] <- efficiency * 1000 * 9.81 * (GetLevelf(f, mean(S[t:t+1]) * (10 ^ 6)) + yconst) * R[t] / (365.25 / frequency(Q) * 24 * 60 * 60)
+    if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {
+      S[t + 1] <- capacity
+      Spill[t] <- S[t] - R[t] + Q[t] - E[t] - capacity
     } else {
-      A[t] <- GetAreaN(N, V = S[t] * (10 ^ 6))
-      y[t] <- GetLevelN(N, V = S[t] * (10 ^ 6))
-      Power[t] <- efficiency * 1000 * 9.81 * (GetLevelN(N, mean(S[t:t+1] * (10 ^ 6))) + yconst) * R[t] / (365.25 / frequency(Q) * 24 * 60 * 60)
+      S[t + 1] <- max(0, S[t] - R[t] + Q[t] - E[t])
     }
+    Power[t] <- efficiency * 1000 * 9.81 * (GetLevel(c, mean(S[t:t+1]) * (10 ^ 6)) + yconst) * R[t] / (365.25 / frequency(Q) * 24 * 60 * 60)
   }
 
   S <- ts(S[1:length(S) - 1], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
-  A <- ts(A, start = start(Q), frequency = frequency(Q))
+  E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))
+  Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   Power <- ts(Power, start = start(Q), frequency = frequency(Q))
   Energy_MWh <- sum(Power * (365.25 / 12) * 24)
-  #R_policy <- R_policy
-  results <- list(S, R, A, y, Power, Bellman, R_policy, Energy_MWh)
-  names(results) <- c("Storage_Mm3", "Release_Mm3", "Surface_area_km2", "Water_level_m", "Power_MW", "Bellman", "R_policy", "Total_Energy_MWh")
+  results <- list(S, R, E, y, Spill, Power, Energy_MWh)
+  names(results) <- c("Storage_Mm3", "Release_Mm3", "Evap_loss_Mm3", "Water_level_m", "Spill_Mm3", "Power_MW", "Total_Energy_MWh")
   
   # ===================================================================================
   
   if (plot) {
-    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
-    plot(S, ylab = "Storage", ylim = c(0, capacity))
-    plot(R, ylab = "Release through turbine", ylim = c(0, qmax))
+    plot(R, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
+    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap))
+    plot(S, ylab = "Storage [Mm3]", ylim = c(0, capacity))
+    plot(Spill, ylab = "Uncontrolled spill [Mm3]")
   }
   return(results)
-} 
+}

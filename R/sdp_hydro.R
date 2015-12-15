@@ -1,39 +1,52 @@
-#' @title Stochastic Dynamic Programming for Hydropower Reservoir 
-#' @description Derives the optimal release policy based on storage state, inflow class and within-year period.
+#' @title Stochastic Dynamic Programming
+#' @description Derives the optimal release policy based on storage state and within-year period only.
 #' @param Q             time series object. Net inflows to the reservoir.
-#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q).
-#' @param capacity_live numerical. The live capacity.
-#' @param surface_area  numerical. The reservoir surface area
-#' @param hydro_cap     numerical. The hydropower plant electric capacity (MW)
-#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m)
-#' @param qmax          numerical. The maximum flow into the hydropower plant
-#' @param depth         numerical. The reservoir maximum depth
-#' @param dep_vol_curve string. The relationship between depth and volume of reservoir.
-#' @param input_curve   data frame of 3 columns: depth, area, volume
+#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
+#' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param evap          vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
+#' @param installed_cap numerical. The hydropower plant electric capacity (MW).
+#' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
+#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
+#' @param qmax          numerical. The maximum flow into the hydropower plant.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
+#' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
+#' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
-#' @seealso \code{\link{dp}} for deterministic Dynamic Programming 
+#' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
 #' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' optimal.releases <- sdp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
 #' }
 #' @import stats
 #' @export
-sdp_hydro <- function (Q, capacity, capacity_live, surface_area, hydro_cap, head, qmax, depth,
-                       dep_vol_curve = "l", input_curve, S_disc = 1000, R_disc = 10,
-                       Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                       S_initial = 1, plot = TRUE, tol = 0.99){
+sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_disc = 10,
+                        Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
+                        loss_exp = 2, S_initial = 1,
+                        surface_area, max_depth, evap,
+                        installed_cap, efficiency = 0.9, head, qmax,
+                        plot = TRUE, tol = 0.99,
+                        Markov = FALSE){
   
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")
   if (frq != 12 && frq != 4) stop("Q must have frequency of 4 or 12")  
+  if (missing(evap)) {
+    evap <- rep(0, length(Q))
+  }
+  if(length(evap) == 1) {
+    evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frq)
+  }
+  if (length(evap) != length(Q) && length(evap) != frq){
+    stop("Evaporation must be either a time series of length Q, a vector of length frequency(Q), or a single numeric constant")
+  }
   if (start(Q)[2] != 1){
     message("NOTE: First incomplete year of time series removed")
     Q <- window(Q, start = c(start(Q)[1] + 1, 1), frequency = frq)
@@ -42,148 +55,259 @@ sdp_hydro <- function (Q, capacity, capacity_live, surface_area, hydro_cap, head
     message("NOTE: Final incomplete year of time series removed")
     Q <- window(Q, end = c(end(Q)[1] - 1, frq), frequency = frq)
   }
-  
-  if ( dep_vol_curve == "n") { 
-    N <- 2 * capacity / (depth * surface_area)
-  } else if ( dep_vol_curve == "f") {
-    f <- sqrt(2) / 3 * (surface_area*10^6) ^ (3/2) / (capacity*10^6)
-  }
-  
-  if (!missing(input_curve)){
-    colnames(input_curve) <- c("depth", "area", "volume")
-  }  
-  
-  Q_month_mat <- matrix(Q, byrow = TRUE, ncol = frq)                                        
-  n_Qcl <- length(Q_disc) - 1
-  Q.probs <- diff(Q_disc)
-  Q_class_med <- apply(Q_month_mat, 2, quantile, type = 8,
-                       probs = Q_disc[-1] - (Q.probs / 2))
-  S_states <- seq(from = capacity - capacity_live, to = capacity, by = capacity_live / S_disc)
-  if ( !missing(qmax) ) {
-    R_max <- qmax
+  if (length(evap) == frq){
+    evap <- ts(rep(evap, length(Q) / frq), start = start(Q), frequency = frq)
   } else {
-    R_max <- hydro_cap * 10^6 / (1000 * 9.81 * head) * (365/12 * 24 * 60 * 60) / 10^6 #10^6 m3/month
+    if(is.ts(evap)==FALSE) stop("Evaporation must be either a time series of length Q or a vector of length frequency(Q) for a seasonal evaporation profile")
+    evap <- window(evap, start = start(Q), end = end(Q), frequency = frq)
   }
-  R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
-  
-  Shell.array <- array(0, dim = c(length(S_states), length(R_disc_x),
-                                  length(Q.probs)))
-  R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
-  Q_class.mat <- matrix(nrow=length(Q_month_mat[,1]),ncol=frq)
-  for (m in 1:frq){
-    
-    Q_disc_x <- gtools::quantcut(Q_month_mat[,m], Q_disc)
-    
-    Q_class.mat[,m] <- as.numeric(as.vector(factor(Q_disc_x,
-                                                   labels = c(1:n_Qcl))))
+  if (missing(head) && missing(qmax)) {
+    stop("You must enter a value for either head or qmax")
   }
-  Q_trans_probs <- array(0, c(length(Q_disc) - 1, length(Q_disc) - 1, frq))             
-  for (m in 1 : frq){
-    for (cl in 1 : n_Qcl){
-      if (m == frq){
-        Tr.count <- table(factor(Q_class.mat[which(Q_class.mat[1:(length(Q_month_mat[,1]) - 1),
-                                                               frq] == cl) + 1, 1], 1:n_Qcl))
-      }else{
-        Tr.count <- table(factor(Q_class.mat[which(Q_class.mat[,m] == cl),
-                                             m + 1], 1:n_Qcl)) 
-      }
-      Tr.freq <-  Tr.count / sum(Tr.count)
-      Q_trans_probs[cl,,m] <- Tr.freq
+  if (!missing(head) && !missing(qmax) && missing(efficiency)) {
+    efficiency <- installed_cap / (9.81 * 1000 * head * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+    if (efficiency > 1) {
+      warning("Check head, qmax and installed_cap: calculated efficiency exceeds 100 %")
     }
   }
-  Rev_to_go <- matrix(0, nrow = (length(S_states)), ncol = n_Qcl)
-  R_policy <- array(0,dim = c(length(S_states), n_Qcl, frq))
-  Bellman <- R_policy
-  R_policy_test <- R_policy
+  if (missing(head)) {
+    head <- installed_cap / (efficiency * 9.81 * 1000 * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+  }
+  if (missing(qmax)) {
+    qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frequency(Q)) * 24 * 60 * 60)
+  }
+  
+  evap_seas <- as.vector(tapply(evap, cycle(evap), FUN = mean))
+
+  # SET UP (non-Markov)---------------------------------------------------------------------------
+  
+  if (Markov == FALSE){
+    Q_month_mat <- matrix(Q, byrow = TRUE, ncol = frq)                                        
+    Q.probs <- diff(Q_disc)
+    Q_class_med <- apply(Q_month_mat, 2, quantile, type = 8,
+                         probs = Q_disc[-1] - (Q.probs / 2))
+    S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)                   
+    R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
+    Shell.array <- array(0,dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
+    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    Rev_to_go <- vector("numeric",length=length(S_states))
+    Results_mat <- matrix(0,nrow=length(S_states),ncol=frq)
+    R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
+    Bellman <- R_policy
+    R_policy_test <- R_policy
+    
+    
+    # SET UP (Markov)-------------------------------------------------------------------------------  
+    
+  } else if (Markov == TRUE){
+    Q_month_mat <- matrix(Q, byrow = TRUE, ncol = frq)                                        
+    n_Qcl <- length(Q_disc) - 1
+    Q.probs <- diff(Q_disc)
+    Q_class_med <- apply(Q_month_mat, 2, quantile, type = 8,
+                         probs = Q_disc[-1] - (Q.probs / 2))
+    S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)                   
+    R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
+    Shell.array <- array(0, dim = c(length(S_states), length(R_disc_x),
+                                    length(Q.probs)))
+    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    Q_class.mat <- matrix(nrow=length(Q_month_mat[,1]),ncol=frq)
+    for (m in 1:frq){
+      Q_disc_x <- gtools::quantcut(Q_month_mat[,m], Q_disc)
+      Q_class.mat[,m] <- as.numeric(as.vector(factor(Q_disc_x,
+                                                     labels = c(1:n_Qcl))))
+    }
+    Q_trans_probs <- array(0, c(length(Q_disc) - 1, length(Q_disc) - 1, frq))             
+    for (m in 1 : frq){
+      for (cl in 1 : n_Qcl){
+        if (m == frq){
+          Tr.count <- table(factor(Q_class.mat[which(Q_class.mat[1:(length(Q_month_mat[,1]) - 1),
+                                                                 frq] == cl) + 1, 1], 1:n_Qcl))
+        }else{
+          Tr.count <- table(factor(Q_class.mat[which(Q_class.mat[,m] == cl),
+                                               m + 1], 1:n_Qcl)) 
+        }
+        Tr.freq <-  Tr.count / sum(Tr.count)
+        Q_trans_probs[cl,,m] <- Tr.freq
+      }}
+    Rev_to_go <- matrix(0, nrow = (length(S_states)), ncol = n_Qcl)
+    R_policy <- array(0,dim = c(length(S_states), n_Qcl, frq))
+    Bellman <- R_policy
+    R_policy_test <- R_policy
+  }
+  
+  
+  # SET UP (storage-depth-area relationships)----------------------------------------------------- 
+  
+  if (missing(max_depth)){
+    c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- (6 * V / (c ^ 2)) ^ (1 / 3)
+      return(y)
+    }
+    GetArea <- function(c, V){
+      Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
+      return(Ay)
+    }
+    yconst <- head - GetLevel(c, capacity * 10 ^ 6)
+  } else {
+    c <- 2 * capacity / (max_depth * surface_area)
+    GetLevel <- function(c, V){
+      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
+      return(y)
+    }
+    GetArea <- function(c, V){
+      Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
+      Ay[which(is.nan(Ay) == TRUE)] <- 0
+      return(Ay)
+    }
+    yconst <- head - max_depth
+  }
+  
+  S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
+  
+  
   message(paste0("policy converging... (>", tol,")"))
   
-  # POLICY OPTIMIZATION----------------------------------------------------------------
+  # POLICY OPTIMIZATION (non-Markov)-------------------------------------------------------------
   
-  repeat{
-    for (t in frq:1){
-      R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
-        sweep(Shell.array, 1, S_states, "+")  #[S_state.t, R.t, Q.t]
-      R.star[which(R.star > (R.cstr - (capacity - capacity_live)))] <- NaN                                                      
-      S.t_plus_1 <- R.cstr - R.star
-      S.t_plus_1[which(S.t_plus_1 > capacity)] <- capacity
-      
-      if ( dep_vol_curve == "l"){
-        H_arr <- (S.t_plus_1 + S_states) / 2 / surface_area
-      } else if ( dep_vol_curve == "f") {
-        H_arr <- ( 6 * (S.t_plus_1 + S_states) * 10^6 / 2 / f^2 ) ^ (1/3)
-      } else if ( dep_vol_curve == "n") {
-        H_arr <- depth * ( (S.t_plus_1 + S_states) / 2 / capacity ) ^ (N/2)
-      } else if ( dep_vol_curve == "u") {
-        H_arr <-  array(sapply( ((S.t_plus_1 + S_states) * 10^6 / 2), 
-                                function (x) 
-                                  ifelse(is.nan(x), NaN, input_curve$depth[ which.min(abs( input_curve$volume - x )) ]) ), 
-                        dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
+  if (Markov == FALSE){
+    repeat{
+      for (t in frq:1){
+        R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
+          sweep(Shell.array, 1, S_states, "+") - 
+          sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
+        #Deficit.arr <- (R.star - target) / target                                           
+        #Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
+        S.t_plus_1 <- R.cstr - R.star
+        S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
+        
+        H_arr <- GetLevel(c, ((S.t_plus_1 + S_states) * (10 ^ 6))  / 2) + yconst
+        Rev_arr <- R.star * H_arr
+        Implied_S_state <- round(1 + (S.t_plus_1 / capacity)
+                                 * (length(S_states) - 1))
+        Implied_S_state[which(Implied_S_state > length(S_states))] <- length(S_states)
+        Rev_to_go.arr <- array(Rev_to_go[Implied_S_state],
+                                dim = c(length(S_states), length(R_disc_x) , length(Q.probs)))       
+        Max_rev_arr <- Rev_arr + Rev_to_go.arr
+        Max_rev_arr_weighted <- sweep(Max_rev_arr, 3, Q.probs, "*")
+        Max_rev_expected <- apply(Max_rev_arr_weighted, c(1, 2), sum)
+        Bellman[,t] <- Rev_to_go
+        Rev_to_go <- apply(Max_rev_expected, 1, max, na.rm = TRUE)
+        Results_mat[,t] <- Rev_to_go
+        R_policy[,t] <- apply(Max_rev_expected, 1, which.max)
       }
-      
-      Rev_arr <- R.star * H_arr
-      Implied_S_state <- round(1 + ( ((S.t_plus_1 - (capacity - capacity_live)) / (capacity_live)) *
-                                       (length(S_states) - 1))) #[S_state.t, R.t, Q.t]
-      Rev_to_go.arr <- array(Rev_to_go,
-                             dim = c(length(S_states), n_Qcl, n_Qcl))  #[S_state.t+1, Q.t+1, Q.t]     
-      Expectation <- apply(sweep(Rev_to_go.arr, c(2,3),
-                                 t(Q_trans_probs[,,t]), "*"), c(1,3), sum) #[S_state.t+1, Q.t]
-      Exp.arr <- Shell.array
-      for (Qt in 1:n_Qcl){
-        Exp.arr[,,Qt] <- matrix(Expectation[,Qt][Implied_S_state[,,Qt]], 
-                                ncol = length(R_disc_x)) #[S_state.t, R.t, Q.t]
+      message(sum(R_policy == R_policy_test) / (frq * length(S_states)))   
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states)) > tol){
+        break
       }
-      R_policy[,,t] <- apply( (Rev_arr + Exp.arr), c(1,3), which.max) #[S_state.t, Q.t, t]
-      Rev_to_go <- apply( (Rev_arr + Exp.arr), c(1,3), max, na.rm = TRUE)
-      Bellman[,,t] <- Rev_to_go
-    }
-    message(sum(R_policy == R_policy_test) /
-              (frq * length(S_states) * n_Qcl))   
-    if (sum(R_policy == R_policy_test) /
-          (frq * length(S_states) * n_Qcl) > tol){
-      break
+      R_policy_test <- R_policy
     }
     
-    R_policy_test <- R_policy
+    # POLICY OPTIMIZATION (Markov)-------------------------------------------------------------
+    
+  } else  if (Markov == TRUE){
+    repeat{
+      for (t in frq:1){
+        R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
+          sweep(Shell.array, 1, S_states, "+") -
+          sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
+        #Deficit.arr <- (R.star - target) / target                                           
+        #Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
+        S.t_plus_1 <- R.cstr - R.star
+        S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
+        H_arr <- GetLevel(c, ((S.t_plus_1 + S_states) * (10 ^ 6))  / 2) + yconst
+        Rev_arr <- R.star * H_arr
+        
+        Implied_S_state <- round(1 + (S.t_plus_1 / capacity)
+                                 * (length(S_states) - 1))
+        Implied_S_state[which(Implied_S_state > length(S_states))] <- length(S_states)
+        Rev_to_go.arr <- array(Rev_to_go,
+                                dim = c(length(S_states), n_Qcl, n_Qcl))       
+        Expectation <- apply(sweep(Rev_to_go.arr, c(2,3),
+                                   t(Q_trans_probs[,,t]), "*"), c(1,3), sum)
+        Exp.arr <- Shell.array
+        for (Qt in 1:n_Qcl){
+          Exp.arr[,,Qt] <- matrix(Expectation[,Qt][Implied_S_state[,,Qt]], 
+                                  ncol = length(R_disc_x))
+        }
+        R_policy[,,t] <- apply( (Rev_arr + Exp.arr), c(1,3), which.max)
+        Rev_to_go <- apply( (Rev_arr + Exp.arr), c(1,3), max, na.rm = TRUE)
+        Bellman[,,t] <- Rev_to_go
+      }
+      message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) > tol){
+        break
+      }
+      R_policy_test <- R_policy
+    }
   }
   
   # ===================================================================================
   
   # POLICY SIMULATION------------------------------------------------------------------
   
-  
-  S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity_live + (capacity - capacity_live)   
-  R_rec <- vector("numeric",length(Q))                      
+  S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
+  R_rec <- vector("numeric",length(Q))
+  E <- vector("numeric", length(Q))
+  y <- vector("numeric", length(Q))
+  Spill <- vector("numeric", length(Q))
+  Power <- vector("numeric", length(Q))
   for (yr in 1:nrow(Q_month_mat)) {
     for (month in 1:frq) {
       t_index <- (frq * (yr - 1)) + month   
       S_state <- which.min(abs(S_states - S[t_index]))
       Qx <- Q_month_mat[yr,month]
-      Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
-      R <- R_disc_x[R_policy[S_state,Q_class,month]]
+      if (Markov == FALSE){
+        R <- R_disc_x[R_policy[S_state,month]]
+      } else if (Markov == TRUE){
+        Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
+        R <- R_disc_x[R_policy[S_state,Q_class,month]]
+      }
       R_rec[t_index] <- R
-      if ( (S[t_index] - R + Qx) > capacity) {
+      
+      
+      E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+      y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
+      
+      
+      if ( (S[t_index] - R + Qx - E[t_index]) > capacity) {
         S[t_index + 1] <- capacity
+        Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]
       }else{
-        if ( (S[t_index] - R + Qx) < (capacity - capacity_live)) {
-          S[t_index + 1] <- (capacity - capacity_live)
-          R_rec[t_index] <- S[t_index] + Qx - (capacity - capacity_live)
+        if ( (S[t_index] - R + Qx - E[t_index]) < 0) {
+          S[t_index + 1] <- 0
+          R_rec[t_index] <- max(0, S[t_index] + Qx - E[t_index])
         }else{
-          S[t_index + 1] <- S[t_index] - R + Qx
+          S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
         }
       }
+      Power[t_index] <- efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:t_index + 1]) * (10 ^ 6)) + yconst) * R_rec[t_index] / (365.25 / frequency(Q) * 24 * 60 * 60)
     }
   }
   R_policy <- (R_policy - 1) / R_disc
-  S <- ts(S[2:length(S)],start = start(Q),frequency = frq)
+  S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
+  E <- ts(E, start = start(Q), frequency = frequency(Q))
+  y <- ts(y, start = start(Q), frequency = frequency(Q))
+  Spill <- ts(Spill, start = start(Q), frequency = frq)
+  Power <- ts(Power, start = start(Q), frequency = frequency(Q))
+  Energy_MWh <- sum(Power * (365.25 / 12) * 24)
+  
   if(plot) {
-    plot(S, ylab = "storage", ylim = c(0, capacity))
-    plot(R_rec, ylab = "release/inflow", ylim = c(0, R_max))
-    lines(Q, col="pink")
+    plot(R_rec, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
+    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap))
+    plot(S, ylab = "Storage [Mm3]", ylim = c(0, capacity))
+    plot(Spill, ylab = "Uncontrolled spill [Mm3]")
   }
   
-  results <- list(R_policy, Bellman, S, R_rec, Q_disc)
-  names(results) <- c("release_policy", "Bellman", "storage", "releases", "flow_disc")
+
+  results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, Power, Q_disc, Energy_MWh)
+  names(results) <- c("release_policy", "Bellman", "storage",
+                      "releases", "evap_loss", "water_level",
+                      "spill", "power", "flow_disc", "Energy_MWh")
+  
   
   return(results)
 }
