@@ -1,11 +1,11 @@
-#' @title Dynamic Programming
-#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
-#' @param Q             vector or time series object. Net inflows to the reservoir.
-#' @param evap          vector or time series object. Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
-#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
-#' @param target        numerical. The target release constant.
-#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @title Dynamic Programming for water supply reservoirs
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict. Follow the recommended units for each parameter if using evap and surface_area. 
+#' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
+#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
+#' @param capacity      numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).
+#' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
@@ -14,9 +14,8 @@
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- dp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' @examples \donttest{layout(1:3)
+#' dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 #' }
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @import stats 
@@ -29,15 +28,17 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
   }
-  
-  if (missing(surface_area) && !missing(evap)) {
-    stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
-  }
-  
+
   if (missing(evap)) {
     evap <- rep(0, length(Q))
   }
-  
+  if(length(evap) == 1) {
+    evap <- rep(evap, length(Q))
+  }
+  if (length(evap) != length(Q)){
+    stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
+  }
+
   if (missing(surface_area)) {
     surface_area <- 0
   }
@@ -188,8 +189,8 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
   
   
   if (plot) {
-    plot(S, ylab = "Storage", ylim = c(0, capacity))
     plot(R, ylab = "Controlled release", ylim = c(0, target))
+    plot(S, ylab = "Storage", ylim = c(0, capacity))
     plot(Spill, ylab = "Uncontrolled spill")
   }
   return(results)

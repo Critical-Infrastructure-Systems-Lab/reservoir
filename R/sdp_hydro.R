@@ -1,4 +1,4 @@
-#' @title Stochastic Dynamic Programming
+#' @title Stochastic Dynamic Programming for hydropower reservoirs
 #' @description Derives the optimal release policy based on storage state and within-year period only.
 #' @param Q             time series object. Net inflows to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
@@ -21,9 +21,9 @@
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- sdp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' @examples \donttest{layout(1:4)
+#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
 #' }
 #' @import stats
 #' @export
@@ -39,7 +39,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")
   if (frq != 12 && frq != 4) stop("Q must have frequency of 4 or 12")  
   if (missing(evap)) {
-    evap <- rep(0, length(Q))
+    evap <- ts(rep(0, length(Q)), start = start(Q), frequency = frq)
   }
   if(length(evap) == 1) {
     evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frq)

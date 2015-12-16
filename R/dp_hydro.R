@@ -1,4 +1,4 @@
-#' @title Dynamic Programming for Hydropower Reservoir
+#' @title Dynamic Programming for hydropower reservoirs
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 #' @param Q             time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.
 #' @param capacity      numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.
@@ -16,9 +16,8 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' @examples \donttest{layout(1:4)
+#' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 #' }
 #' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
 #' @import stats 
@@ -48,6 +47,12 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   
   if (missing(evap)) {
     evap <- rep(0, length(Q))
+  }
+  if(length(evap) == 1) {
+    evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frq)
+  }
+  if (length(evap) != length(Q)){
+    stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
   }
   
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)

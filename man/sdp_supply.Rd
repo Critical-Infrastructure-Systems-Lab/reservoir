@@ -2,7 +2,7 @@
 % Please edit documentation in R/sdp_supply.R
 \name{sdp_supply}
 \alias{sdp_supply}
-\title{Stochastic Dynamic Programming}
+\title{Stochastic Dynamic Programming for water supply reservoirs}
 \usage{
 sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
   0.2375, 0.475, 0.7125, 0.95, 1), loss_exp = 2, S_initial = 1,
@@ -47,9 +47,9 @@ Returns a list that includes: the optimal policy as an array of release decision
 Derives the optimal release policy based on storage state and within-year period only.
 }
 \examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- sdp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
+\donttest{layout(1:3)
+sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3))
+sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3), Markov = TRUE)
 }
 }
 \references{

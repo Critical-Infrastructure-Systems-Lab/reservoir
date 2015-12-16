@@ -1,4 +1,4 @@
-#' @title Stochastic Dynamic Programming
+#' @title Stochastic Dynamic Programming for water supply reservoirs
 #' @description Derives the optimal release policy based on storage state and within-year period only.
 #' @param Q             time series object. Net inflows to the reservoir.
 #' @param evap          vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
@@ -18,9 +18,9 @@
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- sdp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
+#' @examples \donttest{layout(1:3)
+#' sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3))
+#' sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3), Markov = TRUE)
 #' }
 #' @import stats
 #' @export
@@ -57,10 +57,6 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   } else {
     if(is.ts(evap)==FALSE) stop("Evaporation must be either a time series of length Q or a vector of length frequency(Q) for a seasonal evaporation profile")
     evap <- window(evap, start = start(Q), end = end(Q), frequency = frq)
-  }
-  
-  if (missing(surface_area) && !missing(evap)) {
-    stop("Evaporation variable (evap) requires input reservoir surface area (surface_area)")
   }
 
   if (missing(surface_area)) {
@@ -278,8 +274,8 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
   total_penalty <- sum( ( (target - R_rec) / target) ^ loss_exp)
   
   if(plot) {
-    plot(S, ylab = "Storage", ylim = c(0, capacity))
     plot(R_rec, ylab = "Controlled release", ylim = c(0, target))
+    plot(S, ylab = "Storage", ylim = c(0, capacity))
     plot(Spill, ylab = "Uncontrolled spill")
   }
   

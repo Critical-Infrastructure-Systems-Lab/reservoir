@@ -2,7 +2,7 @@
 % Please edit documentation in R/dp_hydro.R
 \name{dp_hydro}
 \alias{dp_hydro}
-\title{Dynamic Programming for Hydropower Reservoir}
+\title{Dynamic Programming for hydropower reservoirs}
 \usage{
 dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
   installed_cap, head, qmax, max_depth, efficiency = 0.9, S_disc = 1000,
@@ -44,9 +44,8 @@ Returns the time series of optimal releases and, if requested, the reliability, 
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- dp(ResX_inflow.ts, capacity = storage_cap, target = demand)
+\donttest{layout(1:4)
+dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 }
 }
 \references{

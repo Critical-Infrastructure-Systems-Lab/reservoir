@@ -2,18 +2,18 @@
 % Please edit documentation in R/dp_supply.R
 \name{dp_supply}
 \alias{dp_supply}
-\title{Dynamic Programming}
+\title{Dynamic Programming for water supply reservoirs}
 \usage{
 dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
   S_initial = 1, surface_area, max_depth, evap, plot = TRUE,
   rep_rrv = FALSE)
 }
 \arguments{
-\item{Q}{vector or time series object. Net inflows to the reservoir.}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
+\item{capacity}{numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{target}{numerical. The target release constant.}
+\item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
@@ -23,11 +23,11 @@ dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
-\item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
-\item{evap}{vector or time series object. Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
@@ -37,12 +37,11 @@ dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 }
 \description{
-Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
+Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict. Follow the recommended units for each parameter if using evap and surface_area.
 }
 \examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- dp_supply(ResX_inflow.ts, capacity = storage_cap, target = demand)
+\donttest{layout(1:3)
+dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 }
 }
 \references{
