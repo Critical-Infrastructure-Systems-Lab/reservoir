@@ -48,6 +48,6 @@ dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 }
 \seealso{
-\code{\link{sdp}} for Stochastic Dynamic Programming
+\code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs
 }
 

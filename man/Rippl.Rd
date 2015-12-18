@@ -7,7 +7,7 @@
 Rippl(Q, target, R, double_cycle = FALSE, plot = TRUE)
 }
 \arguments{
-\item{Q}{a time series or vector  of net inflows to the reservoir (volumetric).}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
 \item{target}{a target release constant in same volumteric units as Q. Can be omitted if R is given.}
 
@@ -21,7 +21,7 @@ Rippl(Q, target, R, double_cycle = FALSE, plot = TRUE)
 Returns the no-fail storage capacity and corresponding storage behaviour time series.
 }
 \description{
-Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorith.
+Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorithm.
 }
 \examples{
 # define a release vector for a constant release equal to 90 \% of the mean inflow

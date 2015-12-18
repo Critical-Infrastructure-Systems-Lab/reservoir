@@ -4,8 +4,8 @@
 \alias{yield}
 \title{Storage-Reliability-Yield (SRY) relationships: Yield computation}
 \usage{
-yield(Q, capacity, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
-  S_initial = 1, max.iterations = 50, double_cycle = FALSE)
+yield(Q, capacity, reliability, profile, plot = TRUE, S_initial = 1,
+  max_iterations = 50, double_cycle = FALSE)
 }
 \arguments{
 \item{Q}{a time series or vector  of net inflows to the reservoir.}
@@ -20,7 +20,7 @@ yield(Q, capacity, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
-\item{max.iterations}{Maximum number of iterations for yield computation.}
+\item{max_iterations}{Maximum number of iterations for yield computation.}
 
 \item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
 }
@@ -32,11 +32,12 @@ Returns the yield for given inflow time series, reservoir capacity, and required
 }
 \examples{
 # Compute yield for 0.95 reliability
-yield_ResX <- yield(ResX_inflow.ts, capacity = 100000, reliability = 0.95)
+layout(1:3)
+yield_ResX <- yield(resX$Q_Mm3, capacity = 500, reliability = 0.95)
 # Compute yield for quarterly time series with seasonal demand profile
 
-quarterly.ts <- aggregate(ResX_inflow.ts, nfrequency = 4)
-yield_ResX.quart <- yield(quarterly.ts,
-capacity = 100000, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
+quart_ts <- aggregate(resX$Q_Mm3, nfrequency = 4)
+yld <- yield(quart_ts,
+capacity = 500, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
 }
 

@@ -17,7 +17,7 @@
 #' @examples \donttest{layout(1:3)
 #' dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 #' }
-#' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
+#' @seealso \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs
 #' @import stats 
 #' @export
 dp_supply <- function(Q, capacity, target, S_disc = 1000,
@@ -76,6 +76,22 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
       return(Ay)
     }
   }
+  
+  GetEvap <- function(s, q, r, ev){
+    e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
+    n <- 0
+    repeat{
+      n <- n + 1
+      s_plus_1 <- max(min(s + q - r - e, capacity), 0)
+      e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
+      if (abs(e_x - e) < 0.001 || n > 20){
+        break
+      } else {
+        e <- e_x
+      }
+    }
+    return(e)
+  }
 
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
 
@@ -112,7 +128,11 @@ dp_supply <- function(Q, capacity, target, S_disc = 1000,
     S_state <- round(1 + ( (S[t] / capacity) *
                              (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    E[t] <- GetArea(c, S[t] * 10 ^ 6) * evap[t] / 10 ^ 6  # Convert to Mm3
+    #E[t] <- GetArea(c, S[t] * 10 ^ 6) * evap[t] / 10 ^ 6  # Convert to Mm3
+    E[t] <- GetEvap(s = S[t], q = Q[t], r = R[t], ev = evap[t])
+    
+    
+    
     y[t] <- GetLevel(c, S[t] * 10 ^ 6)
 
     if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {

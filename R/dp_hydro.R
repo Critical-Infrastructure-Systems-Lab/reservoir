@@ -17,9 +17,10 @@
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @examples \donttest{layout(1:4)
-#' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+#' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+#' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 #' }
-#' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
+#' @seealso \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs
 #' @import stats 
 #' @export
 dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
@@ -49,7 +50,7 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
     evap <- rep(0, length(Q))
   }
   if(length(evap) == 1) {
-    evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frq)
+    evap <- ts(rep(evap, length(Q)), start = start(Q), frequency = frequency(Q))
   }
   if (length(evap) != length(Q)){
     stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
@@ -89,6 +90,22 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
     yconst <- head - max_depth
   }
   
+  GetEvap <- function(s, q, r, ev){
+    e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
+    n <- 0
+    repeat{
+      n <- n + 1
+      s_plus_1 <- max(min(s + q - r - e, capacity), 0)
+      e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
+      if (abs(e_x - e) < 0.001 || n > 20){
+        break
+      } else {
+        e <- e_x
+      }
+    }
+    return(e)
+  }
+  
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
 
   # POLICY OPTIMIZATION----------------------------------------------------------------
@@ -124,7 +141,8 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) * (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    E[t] <- GetArea(c, S[t] * (10 ^ 6)) * evap[t] / 10 ^ 6
+    #E[t] <- GetArea(c, S[t] * (10 ^ 6)) * evap[t] / 10 ^ 6
+    E[t] <- GetEvap(s = S[t], q = Q[t], r = R[t], ev = evap[t])
     y[t] <- GetLevel(c, S[t] * (10 ^ 6))
     
     if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {

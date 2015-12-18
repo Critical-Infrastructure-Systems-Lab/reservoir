@@ -54,14 +54,16 @@ Derives the optimal release policy based on storage state and within-year period
 }
 \examples{
 \donttest{layout(1:4)
-sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
-sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
+sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
 }
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 }
 \seealso{
-\code{\link{sdp}} for deterministic Dynamic Programming
+\code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
 }
 

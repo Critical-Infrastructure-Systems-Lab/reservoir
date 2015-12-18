@@ -4,8 +4,8 @@
 \alias{storage}
 \title{Storage-Reliability-Yield (SRY) relationships: Storage computation}
 \usage{
-storage(Q, yield, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
-  S_initial = 1, max.iterations = 50, double_cycle = FALSE)
+storage(Q, yield, reliability, profile, plot = TRUE, S_initial = 1,
+  max_iterations = 50, double_cycle = FALSE)
 }
 \arguments{
 \item{Q}{time series or vector. The net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.}
@@ -20,7 +20,7 @@ storage(Q, yield, reliability, profile = rep(1, frequency(Q)), plot = TRUE,
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
-\item{max.iterations}{Maximum number of iterations for yield computation.}
+\item{max_iterations}{Maximum number of iterations for yield computation.}
 
 \item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
 }
@@ -32,6 +32,7 @@ Returns the required storage for given inflow time series, yield, and target tim
 }
 \examples{
 # Determine the required storage for 95 \% reliability and yield equal to 80 \% of the mean inflow.
-storage(ResX_inflow.ts, yield = 0.8*mean(ResX_inflow.ts), reliability = 0.95)
+layout(1:3)
+storage(resX$Q_Mm3 * 20, yield = 0.9 * mean(resX$Q_Mm3), reliability = 0.95)
 }
 

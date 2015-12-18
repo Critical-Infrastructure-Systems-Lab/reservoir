@@ -20,10 +20,12 @@
 #' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
+#' @seealso \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
 #' @examples \donttest{layout(1:4)
-#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
-#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
+#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+#' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+#' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+#' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
 #' }
 #' @import stats
 #' @export
@@ -163,6 +165,22 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
     yconst <- head - max_depth
   }
   
+  GetEvap <- function(s, q, r, ev){
+    e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
+    n <- 0
+    repeat{
+      n <- n + 1
+      s_plus_1 <- max(min(s + q - r - e, capacity), 0)
+      e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
+      if (abs(e_x - e) < 0.001 || n > 20){
+        break
+      } else {
+        e <- e_x
+      }
+    }
+    return(e)
+  }
+  
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
   
   
@@ -268,7 +286,8 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
       R_rec[t_index] <- R
       
       
-      E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+      #E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+      E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
       y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
       
       

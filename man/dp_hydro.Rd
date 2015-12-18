@@ -45,13 +45,14 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 }
 \examples{
 \donttest{layout(1:4)
-dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
+installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 }
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 }
 \seealso{
-\code{\link{sdp}} for Stochastic Dynamic Programming
+\code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs
 }
 

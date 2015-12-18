@@ -10,7 +10,7 @@ sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
   rep_rrv = FALSE)
 }
 \arguments{
-\item{Q}{time series object. Net inflows to the reservoir.}
+\item{Q}{time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
 \item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
 
@@ -30,7 +30,7 @@ sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
 
 \item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
 
-\item{evap}{vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
+\item{evap}{vector of length equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
@@ -56,6 +56,6 @@ sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3), 
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 }
 \seealso{
-\code{\link{sdp}} for deterministic Dynamic Programming
+\code{\link{dp_supply}} for deterministic Dynamic Programming for water supply reservoirs
 }
 

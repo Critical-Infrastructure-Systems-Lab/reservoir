@@ -16,7 +16,7 @@ Returns an estimate of the Hurst coefficient, H (0.5 < H < 1).
 Hurst coefficient estimation.
 }
 \examples{
-Q_annual <- aggregate(ResX_inflow.ts) #convert monthly to annual data
+Q_annual <- aggregate(resX$Q_Mm3) #convert monthly to annual data
 Hurst(Q_annual)
 }
 \references{

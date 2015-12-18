@@ -1,7 +1,7 @@
 #' @title Stochastic Dynamic Programming for water supply reservoirs
 #' @description Derives the optimal release policy based on storage state and within-year period only.
-#' @param Q             time series object. Net inflows to the reservoir.
-#' @param evap          vector of lenght equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
+#' @param Q             time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
+#' @param evap          vector of length equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
@@ -17,7 +17,7 @@
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
+#' @seealso \code{\link{dp_supply}} for deterministic Dynamic Programming for water supply reservoirs
 #' @examples \donttest{layout(1:3)
 #' sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3))
 #' sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3), Markov = TRUE)
@@ -147,6 +147,22 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
     }
   }
   
+  GetEvap <- function(s, q, r, ev){
+    e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
+    n <- 0
+    repeat{
+      n <- n + 1
+      s_plus_1 <- max(min(s + q - r - e, capacity), 0)
+      e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
+      if (abs(e_x - e) < 0.001 || n > 20){
+        break
+      } else {
+        e <- e_x
+      }
+    }
+    return(e)
+  }
+  
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
   
   
@@ -248,7 +264,9 @@ sdp_supply <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,
       R_rec[t_index] <- R
       
 
-        E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+        #E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
+        E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
+        
         y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
 
       
