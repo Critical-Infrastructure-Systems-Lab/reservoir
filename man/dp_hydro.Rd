@@ -17,7 +17,7 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 
 \item{surface_area}{numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.}
 
-\item{evap}{vector or time series object. Pan evaporation, in units m. Varies with reservroi surface area..}
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
 \item{installed_cap}{numerical. The hydropower plant electric capacity (MW).}
 

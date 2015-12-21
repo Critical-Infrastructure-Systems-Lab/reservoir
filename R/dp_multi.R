@@ -1,8 +1,12 @@
-#' @title Dynamic Programming with multiple objectives
+#' @title Dynamic Programming with multiple objectives (supply, flood control, amenity.)
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level.
 #' @param Q             vector or time series object. Net inflows to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant.
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
+#' @param spill_targ    numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
 #' @param R_max         numerical. The maximum controlled release.
 #' @param weights       vector of length 3 indicating weighting to be applied to release, spill and water level objectives respectively.
@@ -14,16 +18,15 @@
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @references Graham, N. and Georgakakos, K. (2010)...
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- dp_multi(ResX_inflow.ts, capacity = storage_cap,
-#' target = demand, R_max = 2 * demand)
+#' @references Nicholas E. Graham and Konstantine P. Georgakakos, (2010) Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
+#' @examples \donttest{ #
+#' 
 #' }
-#' @seealso \code{\link{sdp}} for Stochastic Dynamic Programming
-#' @import stats 
+#' @seealso \code{\link{sdp_multi}} for Stochastic Dynamic Programming
+#' @import stats
 #' @export
-dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
+dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
+                     R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
                      weights = c(4, 2, 1), loss_exp = c(2, 2, 2),
                      S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE,
                      rep_rrv = FALSE) {
@@ -31,6 +34,20 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
   }
+  
+  if (missing(evap)) {
+    evap <- rep(0, length(Q))
+  }
+  if(length(evap) == 1) {
+    evap <- rep(evap, length(Q))
+  }
+  if (length(evap) != length(Q)){
+    stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
+  }
+  if (missing(surface_area)) {
+    surface_area <- 0
+  }
+  
   
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
   R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
@@ -49,17 +66,62 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   
+  
+  if (missing(max_depth)){
+    c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
+    GetLevel <- function(c, V){
+      y <- (6 * V / (c ^ 2)) ^ (1 / 3)
+      return(y)
+    }
+    GetArea <- function(c, V){
+      Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
+      return(Ay)
+    }
+  } else {
+    c <- 2 * capacity / (max_depth * surface_area)
+    GetLevel <- function(c, V){
+      y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
+      return(y)
+    }
+    GetArea <- function(c, V){
+      Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
+      Ay[which(is.nan(Ay) == TRUE)] <- 0
+      return(Ay)
+    }
+  }
+  
+  GetEvap <- function(s, q, r, ev){
+    e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
+    n <- 0
+    repeat{
+      n <- n + 1
+      s_plus_1 <- max(min(s + q - r - e, capacity), 0)
+      e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
+      if (abs(e_x - e) < 0.001 || n > 20){
+        break
+      } else {
+        e <- e_x
+      }
+    }
+    return(e)
+  }
+  
+  S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
+  
+  
   # POLICY OPTIMIZATION----------------------------------------------------------------
   
   for (t in length(Q):1) {
     Cost_mat <- matrix(rep(R_costs, length(S_states)),
                        ncol = length(R_costs), byrow = TRUE)
-    Balance_mat <- State_mat + Q[t]
+    Balance_mat <- State_mat + Q[t] - (evap[t] * S_area_rel / 10 ^ 6)
     Cost_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat < 0)] <- NaN
+    Cost_mat[which(is.nan(Balance_mat[,1]))] <- 0           
+    Balance_mat[which(is.nan(Balance_mat[,1]))] <- 0        
     Spill_costs <- Balance_mat - capacity
     Spill_costs[which(Spill_costs < 0)] <- 0
-    Spill_costs <- (Spill_costs / quantile(Q, 0.95)) ^ loss_exp[2]
+    Spill_costs <- (Spill_costs / quantile(Q, spill_targ)) ^ loss_exp[2]
     Balance_mat[which(Balance_mat > capacity)] <- capacity
     Vol_costs <- abs(((Balance_mat - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3]
     Implied_S_state <- round(1 + ((Balance_mat / capacity) *
@@ -78,26 +140,32 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
   S <- vector("numeric", length(Q) + 1)
   S[1] <- S_initial * capacity
   R <- vector("numeric", length(Q))
+  E <- vector("numeric", length(Q))
+  y <- vector("numeric", length(Q))
   Spill <- vector("numeric", length(Q))
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) *
                              (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    if ( (S[t] - R[t] + Q[t]) > capacity) {
+    E[t] <- GetEvap(s = S[t], q = Q[t], r = R[t], ev = evap[t])
+    y[t] <- GetLevel(c, S[t] * 10 ^ 6)
+    if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {
       S[t + 1] <- capacity
-      Spill[t] <- S[t] - R[t] + Q[t] - capacity
+      Spill[t] <- S[t] - R[t] + Q[t] - capacity - E[t]
     } else {
-      S[t + 1] <- S[t] - R[t] + Q[t]
+      S[t + 1] <- max(0, S[t] - R[t] + Q[t] - E[t])
     }
   }
   S <- ts(S[2:length(S)], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
+  E <- ts(E, start = start(Q), frequency = frequency(Q))
+  y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   # ===================================================================================
   
   
   total_release_cost <- sum((R/target)[which((R/target) <  1)] ^ loss_exp[1])
-  total_spill_cost <- sum((Spill / quantile(Q, 0.95)) ^ loss_exp[2])
+  total_spill_cost <- sum((Spill / quantile(Q, spill_targ)) ^ loss_exp[2])
   total_volume_cost <- sum(((S - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3])
   total_weighted_cost <- weights[1] * total_release_cost + weights[2] * total_spill_cost + weights[3] * total_volume_cost 
   costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
@@ -145,16 +213,16 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
       }
     }
     
-    results <- list(S, R, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, costs)
-    names(results) <- c("storage", "releases", "spill", "annual_reliability",
+    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, costs)
+    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability")
     
     
     
   } else {
-    results <- list(S, R, Spill, costs)
-    names(results) <- c("storage", "releases", "spill", "total_costs")
+    results <- list(S, R, E, y, Spill, costs)
+    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "total_costs")
   }
   
   #===============================================================================
@@ -163,9 +231,9 @@ dp_multi <- function(Q, capacity, target, R_max, vol_targ = 0.75,
   if (plot) {
     
     layout(1:3)
-    plot(S, ylab = "storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
-    plot(R, ylab = "release", ylim = c(0, R_max)); abline(h = target, lty = 2)
-    plot(Spill, ylab = "Spill")
+    plot(R, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
+    plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
+    plot(Spill, ylab = "Uncontrolled spill")
   }
   return(results)
 } 

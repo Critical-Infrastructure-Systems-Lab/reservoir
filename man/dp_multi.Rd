@@ -2,9 +2,10 @@
 % Please edit documentation in R/dp_multi.R
 \name{dp_multi}
 \alias{dp_multi}
-\title{Dynamic Programming with multiple objectives}
+\title{Dynamic Programming with multiple objectives (supply, flood control, amenity.)}
 \usage{
-dp_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 2, 1),
+dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
+  target, spill_targ = 0.95, vol_targ = 0.75, weights = c(4, 2, 1),
   loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1,
   plot = TRUE, rep_rrv = FALSE)
 }
@@ -15,7 +16,15 @@ dp_multi(Q, capacity, target, R_max, vol_targ = 0.75, weights = c(4, 2, 1),
 
 \item{target}{numerical. The target release constant.}
 
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
+
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
+
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
+
 \item{R_max}{numerical. The maximum controlled release.}
+
+\item{spill_targ}{numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.}
 
 \item{vol_targ}{numerical. The target storage volume constant (as proportion of capacity).}
 
@@ -40,18 +49,16 @@ Returns the time series of optimal releases and, if requested, the reliability, 
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level.
 }
 \examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- dp_multi(ResX_inflow.ts, capacity = storage_cap,
-target = demand, R_max = 2 * demand)
+\donttest{ #
+
 }
 }
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 
-Graham, N. and Georgakakos, K. (2010)...
+Nicholas E. Graham and Konstantine P. Georgakakos, (2010) Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
 }
 \seealso{
-\code{\link{sdp}} for Stochastic Dynamic Programming
+\code{\link{sdp_multi}} for Stochastic Dynamic Programming
 }
 

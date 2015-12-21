@@ -34,7 +34,8 @@ Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
       Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
       R <- c(R, R)
     }
-  
+    
+    
     K <- vector("numeric", length = length(Q) + 1)
     Spill <- vector("numeric", length = length(Q))
     for (t in 1:length(Q)) {
@@ -49,6 +50,7 @@ Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
     Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
     if (plot) {
         plot(max(K) - K, ylab = "Storage", main = paste0("No Fail Storage = ", round(max(K),3)))
+        plot(Q, ylab = "Inflow totals")
         plot(Spill, ylab = "Uncontrolled spill")
     }
     results <- list(max(K),(max(K) - K), Spill)

@@ -23,159 +23,21 @@ rrv <- function(Q, target, capacity, double_cycle = FALSE,
                 surface_area, max_depth, evap,
                 plot = TRUE, S_initial = 1, policy) {
     
-
     frq <- frequency(Q)
     if(length(target)==1){
       target <- rep(target, length(Q))
     }
-    if (double_cycle) {
-        Q <- ts(c(Q, Q), start = start(Q), frequency = frq)
-        target <- c(target, target)
-    }
+    if(length(target) != length(Q))
+      stop("target must be numerical constant or time series of length Q")
     
-    if (missing(evap)) {
-      evap <- rep(0, length(Q))
-    }
-    if(length(evap) == 1) {
-      evap <- rep(evap, length(Q))
-    }
-    if (length(evap) != length(Q)){
-      stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
-    }
+    target <- ts(target, start = start(Q), frequency = frequency(Q))
     
-    if (missing(surface_area)) {
-      surface_area <- 0
-    }
     
-    if (missing(max_depth)){
-      c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
-      GetLevel <- function(c, V){
-        y <- (6 * V / (c ^ 2)) ^ (1 / 3)
-        return(y)
-      }
-      GetArea <- function(c, V){
-        Ay <- (((3 * c * V) / (sqrt(2))) ^ (2 / 3))
-        return(Ay)
-      }
-    } else {
-      c <- 2 * capacity / (max_depth * surface_area)
-      GetLevel <- function(c, V){
-        y <- max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2)
-        return(y)
-      }
-      GetArea <- function(c, V){
-        Ay <- ((2 * (capacity * 10 ^ 6)) / (c * max_depth * (V / (capacity * 10 ^ 6)) ^ (c / 2))) * ((V / (capacity * 10 ^ 6)) ^ (c / 2)) ^ (2 / c)
-        Ay[which(is.nan(Ay) == TRUE)] <- 0
-        return(Ay)
-      }
-    }
-    
-    GetEvap <- function(s, q, r, ev){
-      e <- GetArea(c, V = s * 10 ^ 6) * ev / 10 ^ 6
-      n <- 0
-      repeat{
-        n <- n + 1
-        s_plus_1 <- max(min(s + q - r - e, capacity), 0)
-        e_x <- GetArea(c, V = ((s + s_plus_1) / 2) * 10 ^ 6) * ev / 10 ^ 6
-        if (abs(e_x - e) < 0.001 || n > 20){
-          break
-        } else {
-          e <- e_x
-        }
-      }
-      return(e)
-    }
-    
-    S <- vector("numeric", length = length(Q) + 1); S[1] <- capacity * S_initial
-    R <- vector("numeric", length = length(Q))
-    E <- vector("numeric", length(Q))
-    y <- vector("numeric", length(Q))
-    Spill <- vector("numeric", length(Q))
-    
-    # SIMULATION--------------------------------------------------------------------
-
-    if (missing(policy)){
-      for (t in 1:length(Q)) {
-
-        #x <- Q[t] - target[t] + S[t]
-        
-        E[t] <- GetEvap(s = S[t], q = Q[t], r = target[t], ev = evap[t])
-        y[t] <- GetLevel(c, S[t] * 10 ^ 6)
-        
-        if ( (S[t] - target[t] + Q[t] - E[t]) > capacity) {
-          S[t + 1] <- capacity
-          Spill[t] <- S[t] - target[t] + Q[t] - capacity - E[t]
-          R[t] <- target[t]
-        } else {
-          if (S[t] - target[t] + Q[t] - E[t] < 0) {
-            S[t + 1] <- 0
-            R[t] <- max(0, S[t] + Q[t] - E[t])
-          } else {
-            S[t + 1] <- S[t] +  Q[t] - target[t] - E[t]
-            R[t] <- target[t]
-          }
-        }
-        
-        
-        #if (x < 0) {
-        #    S[t + 1] <- 0
-        #    R[t] <- Q[t] + S[t]
-        #} else {
-        #    if (x > capacity) {
-        #        S[t + 1] <- capacity
-        #        R[t] <- target[t]
-        #    } else {
-         #       S[t + 1] <- x
-        #        R[t] <- target[t]
-         #   }
-        #}
-    }
-    }
-    
-    if (!missing(policy)){
-      if (is.list(policy) == FALSE) stop("The policy must be the full output returned by the sdp_supply function")
-      
-      Q_month_mat <- matrix(Q, byrow = TRUE, ncol = frq)
-      
-      if (length(dim(policy$release_policy)) == 2){
-        S_disc <- length(policy$release_policy[,1]) - 1
-      } else {
-        S_disc <- length(policy$release_policy[,1,1]) - 1
-      }
-      
-      S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
-      Q.probs <- diff(policy$flow_disc)
-      Q_class_med <- apply(Q_month_mat, 2, quantile, type = 8,
-                           probs = policy$flow_disc[-1] - (Q.probs / 2))
-      
-      for (yr in 1:nrow(Q_month_mat)) {
-        for (month in 1:frq) {
-          t_index <- (frq * (yr - 1)) + month   
-          S_state <- which.min(abs(S_states - S[t_index]))
-          Qx <- Q_month_mat[yr, month]
-          
-          if (length(dim(policy$release_policy)) == 2){
-            Rx <- target[t_index] * policy$release_policy[S_state, month]
-          } else {
-            Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
-            Rx <- target[t_index] * policy$release_policy[S_state, Q_class, month]
-          }
-          
-          if ( (S[t_index] - Rx + Qx) > capacity) {
-            S[t_index + 1] <- capacity
-            R[t_index] <- Rx
-          }else{
-            if ( (S[t_index] - Rx + Qx) < 0) {
-              S[t_index + 1] <- 0
-              R[t_index] <- S[t_index] + Qx
-            }else{
-              S[t_index + 1] <- S[t_index] - Rx + Qx
-              R[t_index] <- Rx
-            }
-          }
-        }
-      }
-    }
+    x <- simRes(Q = Q, target = target, capacity = capacity, double_cycle = double_cycle, policy = policy,
+                surface_area = surface_area, max_depth = max_depth, evap = evap, S_initial = S_initial, plot = FALSE)
+    R <- x$releases
+    S <- x$storage
+    Spill <- x$spill
 
     #===============================================================================
     
@@ -216,17 +78,27 @@ rrv <- function(Q, target, capacity, double_cycle = FALSE,
         }
     }
     
+    
+    
+    
     #===============================================================================
     
+
+    
+    
     results <- list(rel_ann, rel_time, rel_vol, resilience, vulnerability,
-                    ts(S[1:length(S) - 1], start = start(Q), frequency = frq),
-                    ts(R, start = start(Q), frequency = frq))
+                    S, R, Spill)
     names(results) <- c("annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability", "storage", "releases")
+                        "resilience", "vulnerability", "storage", "releases", "spill")
     if (plot) {
-        plot(ts(S[1:length(S) - 1], start = start(Q), frequency = frq), ylab = "Storage", ylim = c(0, capacity))
-        plot(ts(R, start = start(Q), frequency = frq), ylab = "Release", ylim = c(0, max(target)))
+        plot(R, ylab = "Release", ylim = c(0, max(target)), main = paste0("Ann rel. = ", round(rel_ann, 2),
+                                                                         "; Time rel. = ", round(rel_time, 2),
+                                                                         "; Vol rel. = ", round(rel_vol, 2),
+                                                                         "; Resil. = ", round(resilience, 2),
+                                                                         "; Vuln. = ", round(vulnerability, 2))); lines(target, lty=3)
+        plot(S, ylab = "Storage", ylim = c(0, capacity))
+        plot(Spill, ylab = "Uncontrolled Spill")
     }
     
     return(results)

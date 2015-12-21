@@ -30,7 +30,7 @@ sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
 
 \item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
 
-\item{evap}{vector of length equal to number of within-year time periods (e.g., if monthy operation, evap should be length 12, representing the seasonal evaporation profile). Pan evaporation, in units of depth. Varies with level if depth and surface_area parameters are specified. For unit consistency, it is recommended that evap is given in metres (m), with all volumes (Q, capacity, R) in cubic meters (m^3) and surface_area in metres squared (m^2) (or equivalents in feet).}
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 

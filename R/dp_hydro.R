@@ -5,7 +5,7 @@
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
 #' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
-#' @param evap          vector or time series object. Pan evaporation, in units m. Varies with reservroi surface area..
+#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
 #' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
 #' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
