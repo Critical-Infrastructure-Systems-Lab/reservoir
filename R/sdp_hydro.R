@@ -61,7 +61,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
     if(is.ts(evap)==FALSE) stop("Evaporation must be either a time series of length Q or a vector of length frequency(Q) for a seasonal evaporation profile")
     evap <- window(evap, start = start(Q), end = end(Q), frequency = frq)
   }
-  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(head))) {
+  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(qmax))) {
     stop("You must enter a value for either head or qmax")
   }
   if (!missing(head) && !missing(qmax) && missing(efficiency) && !is.na(head) && !is.na(qmax)) {

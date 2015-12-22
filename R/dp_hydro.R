@@ -29,7 +29,7 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   if (is.ts(Q) == FALSE) {
     stop("Q must be time series object")
   }
-  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(head))) {
+  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(qmax))) {
     stop("You must enter a value for either head or qmax")
   }
   if (!missing(head) && !missing(qmax) && missing(efficiency) && !is.na(head) && !is.na(qmax)) {
