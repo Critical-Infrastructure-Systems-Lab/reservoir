@@ -19,9 +19,4 @@ Hurst coefficient estimation.
 Q_annual <- aggregate(resX$Q_Mm3) #convert monthly to annual data
 Hurst(Q_annual)
 }
-\references{
-H.E.Hurst (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.
-
-Pfaff, B. (2008) Analysis of integrated and cointegrated time series with R, Springer, New York. [p.68]
-}
 

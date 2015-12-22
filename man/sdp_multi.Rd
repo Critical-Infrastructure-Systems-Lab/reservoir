@@ -62,11 +62,6 @@ optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap,
 target = demand, R_max = 2 * demand)
 }
 }
-\references{
-Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-
-Nicholas E. Graham and Konstantine P. Georgakakos, 2010: Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
-}
 \seealso{
 \code{\link{dp_multi}} for deterministic Dynamic Programming.
 }

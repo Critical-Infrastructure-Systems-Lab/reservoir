@@ -17,13 +17,13 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 
 \item{surface_area}{numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.}
 
-\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
+\item{evap}{vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.}
 
 \item{installed_cap}{numerical. The hydropower plant electric capacity (MW).}
 
-\item{head}{numerical. The maximum hydraulic head of the hydropower plant (m).}
+\item{head}{numerical. The maximum hydraulic head of the hydropower plant (m). Can be omitted and estimated if qmax is supplied.}
 
-\item{qmax}{numerical. The maximum flow into the hydropower plant.}
+\item{qmax}{numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.}
 
 \item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
 
@@ -48,9 +48,6 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 }
-}
-\references{
-Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 }
 \seealso{
 \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs

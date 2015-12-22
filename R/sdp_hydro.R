@@ -1,25 +1,23 @@
 #' @title Stochastic Dynamic Programming for hydropower reservoirs
 #' @description Derives the optimal release policy based on storage state and within-year period only.
-#' @param Q             time series object. Net inflows to the reservoir.
-#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
+#' @param Q             time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.
+#' @param capacity      numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
-#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
+#' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
 #' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
-#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
+#' @param evap          vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
 #' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
-#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
-#' @param qmax          numerical. The maximum flow into the hydropower plant.
+#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m). Can be omitted if qmax is supplied.
+#' @param qmax          numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param Q_disc        vector. Inflow discretization bounding quantiles. Defaults to five inflow classes bounded by quantile vector c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0).
-#' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
-#' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.
+#' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @seealso \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
 #' @examples \donttest{layout(1:4)
 #' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
@@ -31,9 +29,9 @@
 #' @export
 sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_disc = 10,
                         Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                        loss_exp = 2, S_initial = 1,
+                        S_initial = 1, efficiency = 0.9,
                         surface_area, max_depth, evap,
-                        installed_cap, efficiency = 0.9, head, qmax,
+                        installed_cap, head, qmax,
                         plot = TRUE, tol = 0.99,
                         Markov = FALSE){
   
@@ -63,20 +61,20 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
     if(is.ts(evap)==FALSE) stop("Evaporation must be either a time series of length Q or a vector of length frequency(Q) for a seasonal evaporation profile")
     evap <- window(evap, start = start(Q), end = end(Q), frequency = frq)
   }
-  if (missing(head) && missing(qmax)) {
+  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(head))) {
     stop("You must enter a value for either head or qmax")
   }
-  if (!missing(head) && !missing(qmax) && missing(efficiency)) {
-    efficiency <- installed_cap / (9.81 * 1000 * head * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+  if (!missing(head) && !missing(qmax) && missing(efficiency) && !is.na(head) && !is.na(qmax)) {
+    efficiency <- installed_cap / (9.81 * 1000 * head * (qmax / ((365.25/frq) * 24 * 60 * 60)))
     if (efficiency > 1) {
       warning("Check head, qmax and installed_cap: calculated efficiency exceeds 100 %")
     }
   }
-  if (missing(head)) {
-    head <- installed_cap / (efficiency * 9.81 * 1000 * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
+  if (missing(head) || is.na(head)) {
+    head <- installed_cap / (efficiency * 9.81 * 1000 * (qmax / ((365.25/frq) * 24 * 60 * 60)))
   }
-  if (missing(qmax)) {
-    qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frequency(Q)) * 24 * 60 * 60)
+  if (missing(qmax) || is.na(qmax)){
+    qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frq) * 24 * 60 * 60)
   }
   
   evap_seas <- as.vector(tapply(evap, cycle(evap), FUN = mean))
@@ -140,7 +138,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
   
   # SET UP (storage-depth-area relationships)----------------------------------------------------- 
   
-  if (missing(max_depth)){
+  if (missing(max_depth) || is.na(max_depth)){
     c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
     GetLevel <- function(c, V){
       y <- (6 * V / (c ^ 2)) ^ (1 / 3)
@@ -195,8 +193,6 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
           sweep(Shell.array, 1, S_states, "+") - 
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
-        #Deficit.arr <- (R.star - target) / target                                           
-        #Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
         S.t_plus_1 <- R.cstr - R.star
         S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
         
@@ -231,8 +227,6 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
           sweep(Shell.array, 1, S_states, "+") -
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
-        #Deficit.arr <- (R.star - target) / target                                           
-        #Cost_arr <- ( (abs(Deficit.arr)) ^ loss_exp)                          
         S.t_plus_1 <- R.cstr - R.star
         S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
         H_arr <- GetLevel(c, ((S.t_plus_1 + S_states) * (10 ^ 6))  / 2) + yconst
@@ -302,17 +296,17 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity, S_disc = 1000, R_d
           S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
         }
       }
-      Power[t_index] <- efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:t_index + 1]) * (10 ^ 6)) + yconst) * R_rec[t_index] / (365.25 / frequency(Q) * 24 * 60 * 60)
+      Power[t_index] <- efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:t_index + 1]) * (10 ^ 6)) + yconst) * R_rec[t_index] / (365.25 / frq * 24 * 60 * 60)
     }
   }
   R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
-  E <- ts(E, start = start(Q), frequency = frequency(Q))
-  y <- ts(y, start = start(Q), frequency = frequency(Q))
+  E <- ts(E, start = start(Q), frequency = frq)
+  y <- ts(y, start = start(Q), frequency = frq)
   Spill <- ts(Spill, start = start(Q), frequency = frq)
-  Power <- ts(Power, start = start(Q), frequency = frequency(Q))
-  Energy_MWh <- sum(Power * (365.25 / 12) * 24)
+  Power <- ts(Power, start = start(Q), frequency = frq)
+  Energy_MWh <- sum(Power * (365.25 / frq) * 24)
   
   if(plot) {
     plot(R_rec, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))

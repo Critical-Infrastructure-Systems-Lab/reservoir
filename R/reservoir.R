@@ -1,19 +1,20 @@
 #' reservoir: Tools for Analysis, Design, and Operation of Water Supply Storages
 #'
-#' Measure single reservoir performance using resilience, reliability, and vulnerability metrics; compute storage-yield-reliability relationships; determine no-fail Rippl storage with sequent peak analysis; optimize release decisions using determinisitc and stochastic dynamic programming; evaluate inflow characteristics.
+#' Measure single reservoir performance using resilience, reliability, and vulnerability metrics; compute storage-yield-reliability relationships; determine no-fail Rippl storage with sequent peak analysis; optimize release decisions for water supply, hydropower, and multi-objective reservoirs using deterministic and stochastic dynamic programming; evaluate inflow characteristics.
 #' 
 #' @section Analysis and design functions:
-#' The \code{\link{Rippl}} function executes the sequent peak algorithm to determine the no-fail storage for given inflow and release time series.
-#' The \code{\link{storage}} function gives the design storage for a specified time-based reliability and yield. Similarly, the \code{\link{yield}} function computes yield given the storage capacity.
+#' The \code{\link{Rippl}} function executes the sequent peak algorithm [Thomas and Burden, 1963] to determine the no-fail storage [Rippl, 1883] for given inflow and release time series.
+#' The \code{\link{storage}} function gives the design storage for a specified time-based reliability and yield. Similarly, the \code{\link{yield}} function computes the reliability yield given the storage capacity.
 #' The \code{\link{simRes}} function simulates a reservoir under standard operating policy, or using an optimised policy produced by \code{\link{sdp_supply}}.
-#' The \code{\link{rrv}} function returns three reliability measures, relilience, and dimensionless vulnerability for given storage, inflow time series, and target release. Users can assume Standard Operating Policy, or can apply the output of \code{\link{sdp_supply}} to determine the RRV metrics under different operating objectives.
-#' The \code{\link{Hurst}} function estimates the Hurst coefficient for an annualized inflow time series.   
+#' The \code{\link{rrv}} function returns three reliability measures, resilience, and dimensionless vulnerability for given storage, inflow time series, and target release [McMahon et al, 2006]. Users can assume Standard Operating Policy, or can apply the output of \code{\link{sdp_supply}} to determine the RRV metrics under different operating objectives.
+#' The \code{\link{Hurst}} function estimates the Hurst coefficient [Hurst, 1951] for an annualized inflow time series, using the method proposed by Pfaff [2008].
 #' @section Optimization functions:
-#' Dynamic Programming functions find the optimal sequence of releases for a given reservoir. Stochastic Dynamic Programming  functions find the optimal release policy for a given reservoir, based on storage, within-year time period and, optionally, current-period inflow. 
-#' For single-objective water supply reservoirs, users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions using Dynamic Programming (\code{\link{dp_supply}}) or Stochastic Dynamic Programming (\code{\link{sdp_supply}}). There is also an option to simulate the output of \code{\link{sdp_supply}} using the \code{\link{rrv}} function to validate the policy under alternative inflows or analyze reservoir performance under different operating objectives.
-#' The optimal operating policy for hydropower operations can be found using Dynamic Programming \code{\link{dp_hydro}} or Stochastic Dynamic Programming \code{\link{sdp_hydro}}. The target is to maximise total energy output over the length of the input time series of inflows.
+#' The Dynamic Programming functions find the optimal sequence of releases for a given reservoir. The Stochastic Dynamic Programming functions find the optimal release policy for a given reservoir, based on storage, within-year time period and, optionally, current-period inflow. 
+#' For single-objective water supply reservoirs, users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions to minimize summed penalty costs over the operating horizon. This can be done using Dynamic Programming (\code{\link{dp_supply}}) or Stochastic Dynamic Programming (\code{\link{sdp_supply}}). There is also an option to simulate the output of \code{\link{sdp_supply}} using the \code{\link{rrv}} function to validate the policy under alternative inflows or analyze reservoir performance under different operating objectives.
+#' The optimal operating policy for hydropower operations can be found using Dynamic Programming \code{\link{dp_hydro}} or Stochastic Dynamic Programming \code{\link{sdp_hydro}}. The operating target is to maximise total energy output over the duration of the input time series of inflows.
+#' The \code{\link{dp_multi}} and \code{\link{sdp_multi}} functions allow users to optimize for three weighted objectives representing water supply deficit, flood control, and amenity.
 #' @section Storage-depth-area relationships:
-#' All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, allow the user to incorporate evaporation losses from the reservoir surface. There are two relationships. The simplest is based on the reservoir \code{capacity} and \code{surface_area} variables. A more nuanced relationship is implemeted if the user also provides the \code{max_depth} input variable.
+#' All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, allow the user to account for evaporation losses from the reservoir surface. The package incorporates two storage-depth-area relationships for adjusting the surface area (and therefore evaporation potential) with storage. The simplest is based the half-pyramid method [Liebe et al, 2005] the reservoir, requiring the user to input the surface area of the reservoir at full capacity, using the \code{surface_area} parameter. A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity using the \code{max_depth} input variable.
 #' Users must use the recommended units when implementing evaporation losses.
 #' @docType package
 #' @name reservoir
@@ -66,5 +67,15 @@
 #'  }
 #' plot (pareto_results$reliability,pareto_results$vulnerability, type = "b", lty = 3)
 #' }
+#' 
+#' @references Hurst, H.E. (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.
+#' @references Kaveh, K., H. Hosseinjanzadeh, and K. Hosseini. (2013) A new equation for calculation of reservoir’s area-capacity curves, KSCE Journal of Civil Engineering 17(5), 1149-1156.
+#' @references Liebe, J., N. Van De Giesen, and Marc Andreini. (2005) Estimation of small reservoir storage capacities in a semi-arid environment: A case study in the Upper East Region of Ghana, Physics and Chemistry of the Earth, 30(6), 448-454.
+#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
+#' @references McMahon, T.A., Adeloye, A.J., Zhou, S.L. (2006) Understanding performance measures of reservoirs, Journal of Hydrology 324 (359-382)
+#' @references Nicholas E. Graham and Konstantine P. Georgakakos, 2010: Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
+#' @references Pfaff, B. (2008) Analysis of integrated and cointegrated time series with R, Springer, New York. [p.68]
+#' @references Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.
+#' @references Thomas H.A., Burden R.P. (1963) Operations research in water quality management. Harvard Water Resources Group, Cambridge
 
 NULL

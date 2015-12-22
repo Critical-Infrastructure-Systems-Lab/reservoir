@@ -5,17 +5,16 @@
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
 #' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
-#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
+#' @param evap          vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
 #' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
-#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m).
-#' @param qmax          numerical. The maximum flow into the hydropower plant.
+#' @param head          numerical. The maximum hydraulic head of the hydropower plant (m). Can be omitted and estimated if qmax is supplied.
+#' @param qmax          numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @examples \donttest{layout(1:4)
 #' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 #' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
@@ -30,19 +29,19 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   if (is.ts(Q) == FALSE) {
     stop("Q must be time series object")
   }
-  if (missing(head) && missing(qmax)) {
+  if ((missing(head) || is.na(head)) && (missing(qmax) || is.na(head))) {
     stop("You must enter a value for either head or qmax")
   }
-  if (!missing(head) && !missing(qmax) && missing(efficiency)) {
+  if (!missing(head) && !missing(qmax) && missing(efficiency) && !is.na(head) && !is.na(qmax)) {
     efficiency <- installed_cap / (9.81 * 1000 * head * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
     if (efficiency > 1) {
       warning("Check head, qmax and installed_cap: calculated efficiency exceeds 100 %")
     }
   }
-  if (missing(head)) {
+  if (missing(head) || is.na(head)) {
     head <- installed_cap / (efficiency * 9.81 * 1000 * (qmax / ((365.25/frequency(Q)) * 24 * 60 * 60)))
   }
-  if (missing(qmax)) {
+  if (missing(qmax) || is.na(qmax)) {
     qmax <- (installed_cap / (efficiency * 9.81 * 1000 * head)) * ((365.25/frequency(Q)) * 24 * 60 * 60)
   }
   
@@ -65,7 +64,7 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   
-  if (missing(max_depth)){
+  if (missing(max_depth) || is.na(max_depth)){
     c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)
     GetLevel <- function(c, V){
       y <- (6 * V / (c ^ 2)) ^ (1 / 3)

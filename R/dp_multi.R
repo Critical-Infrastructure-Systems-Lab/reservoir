@@ -17,8 +17,6 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @references Nicholas E. Graham and Konstantine P. Georgakakos, (2010) Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
 #' @examples \donttest{ #
 #' 
 #' }
@@ -230,7 +228,6 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   
   if (plot) {
     
-    layout(1:3)
     plot(R, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
     plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
     plot(Spill, ylab = "Uncontrolled spill")

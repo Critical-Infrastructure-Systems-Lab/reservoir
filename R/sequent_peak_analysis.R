@@ -6,9 +6,6 @@
 #' @param double_cycle  logical. If TRUE the Q and R time series will be replicated and placed end-to-end to double the simulation. Recommended if the critical period occurs at the end of the sequence.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram is plotted.
 #' @return Returns the no-fail storage capacity and corresponding storage behaviour time series.
-#' @references Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.
-#' @references Thomas H.A., Burden R.P. (1963) Operations research in water quality management. Harvard Water Resources Group, Cambridge
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @examples # define a release vector for a constant release equal to 90 % of the mean inflow
 #' no_fail_storage <- Rippl(resX$Q_Mm3, target = 0.9 * mean(resX$Q_Mm3))
 #' @import stats

@@ -14,7 +14,6 @@ Description: Measure single-storage water supply system performance using resili
     determine no-fail storage with sequent peak analysis; optimize release
     decisions using deterministic and stochastic dynamic programming; evaluate
     inflow persistence using the Hurst coefficient.
-Depends: R(>= 2.10.0)
 License: GPL (>= 2)
 LazyData: yes
 Imports:

@@ -53,11 +53,6 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 
 }
 }
-\references{
-Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-
-Nicholas E. Graham and Konstantine P. Georgakakos, (2010) Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
-}
 \seealso{
 \code{\link{sdp_multi}} for Stochastic Dynamic Programming
 }

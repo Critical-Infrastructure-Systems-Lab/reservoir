@@ -11,7 +11,6 @@
 #' @param S_initial          numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
 #' @param policy             list. The output of the SDP function. If omitted, Standard Operating Policy is assumed.
 #' @return Returns reliability, resilience and vulnerability metrics based on supply deficits.
-#' @references McMahon, T.A., Adeloye, A.J., Zhou, S.L. (2006) Understanding performance measures of reservoirs, Journal of Hydrology 324 (359-382)
 #' @examples # Compare reliability, resilience and vulnerability for two operating policies (SOP and SDP).
 #' rrv(resX$Q_Mm3, capacity = 20*resX$cap_Mm3, target = 0.95 * mean(resX$Q_Mm3))
 #' pol_Markov <- sdp_supply(resX$Q_Mm3, capacity = 20 * resX$cap_Mm3,

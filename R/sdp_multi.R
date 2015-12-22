@@ -20,8 +20,6 @@
 #' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @references Nicholas E. Graham and Konstantine P. Georgakakos, 2010: Toward Understanding the Value of Climate Information for Multiobjective Reservoir Management under Present and Future Climate and Demand Scenarios. J. Appl. Meteor. Climatol., 49, 557-573.
 #' @seealso \code{\link{dp_multi}} for deterministic Dynamic Programming.
 #' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
 #' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
@@ -86,8 +84,8 @@ sdp_multi <- function (Q, capacity, target, R_max = 2 * target, surface_area, ma
     Shell.array <- array(0,dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
     R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Cost_to_go <- vector("numeric",length=length(S_states))
-    Results_mat <- matrix(0,nrow=length(S_states),ncol=12)
-    R_policy <- matrix(0,nrow=length(S_states),ncol=12)
+    Results_mat <- matrix(0,nrow=length(S_states),ncol=frq)
+    R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
     Bellman <- R_policy
     R_policy_test <- R_policy
   
