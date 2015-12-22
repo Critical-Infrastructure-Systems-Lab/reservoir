@@ -1,27 +1,26 @@
 #' @title Dynamic Programming for water supply reservoirs
 #' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict. Follow the recommended units for each parameter if using evap and surface_area. 
 #' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
-#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param capacity      numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).
 #' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
 #' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
-#' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
+#' @return Returns the reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 #' @examples \donttest{layout(1:3)
 #' dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 #' }
 #' @seealso \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs
 #' @import stats 
 #' @export
-dp_supply <- function(Q, capacity, target, S_disc = 1000,
-                      R_disc = 10, loss_exp = 2, S_initial = 1,
-                      surface_area, max_depth, evap,
+dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
+                      S_disc = 1000, R_disc = 10, loss_exp = 2, S_initial = 1,
                       plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {

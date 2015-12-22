@@ -1,9 +1,9 @@
 #' @title Storage-Reliability-Yield (SRY) relationships: Yield computation
 #' @description Returns the yield for given inflow time series, reservoir capacity, and required time-based reliability. Assumes standard operating policy. Yield is computed iteratively using the bi-section method.
-#' @param Q               a time series or vector  of net inflows to the reservoir.
-#' @param capacity        numerical.  (must be same volumetric unit as Q and R).
-#' @param reliability     numerical.
-#' @param profile         a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.
+#' @param Q               vector or time series object. Net inflow totals to the reservoir. 
+#' @param capacity        numerical. The reservoir storage capacity. Must be in the same volumetric units as Q.
+#' @param reliability     numerical. The required time-based reliability.
+#' @param demand_profile  a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.
 #' @param plot            logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param S_initial       numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
 #' @param max_iterations  Maximum number of iterations for yield computation.
@@ -16,16 +16,16 @@
 #' 
 #' quart_ts <- aggregate(resX$Q_Mm3, nfrequency = 4)
 #' yld <- yield(quart_ts,
-#' capacity = 500, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
+#' capacity = 500, reliability = 0.9, demand_profile = c(0.8, 1.2, 1.2, 0.8))
 #' @import stats
 #' @export
-yield <- function(Q, capacity, reliability, profile,
+yield <- function(Q, capacity, reliability, demand_profile,
                   plot = TRUE, S_initial = 1, max_iterations = 50, double_cycle = FALSE) {
     
-    if (missing(profile))
-        profile <- rep(1, frequency(Q))
-    if (length(profile) != frequency(Q)) 
-        stop("profile must have length equal to the time series frequency")
+    if (missing(demand_profile))
+      demand_profile <- rep(1, frequency(Q))
+    if (length(demand_profile) != frequency(Q)) 
+        stop("demand_profile must have length equal to the time series frequency")
     if (reliability < 0 || reliability > 1)
         stop("Reliability must be between 0 and 1")
   
@@ -46,7 +46,7 @@ yield <- function(Q, capacity, reliability, profile,
         Spill <- vector("numeric", length(Q))
         i <- i + 1
         mid_yield <- (min_yield + max_yield) / 2
-        R_target <- rep(mid_yield, length(Q)) * rep(profile, length(Q) / frequency(Q))
+        R_target <- rep(mid_yield, length(Q)) * rep(demand_profile, length(Q) / frequency(Q))
         for (t in 1:length(Q)) {
             x <- Q[t] - R_target[t] + S[t]
             if (x < 0) {

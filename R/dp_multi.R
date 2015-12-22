@@ -1,14 +1,14 @@
-#' @title Dynamic Programming with multiple objectives (supply, flood control, amenity.)
-#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level.
-#' @param Q             vector or time series object. Net inflows to the reservoir.
+#' @title Dynamic Programming with multiple objectives (supply, flood control, amenity)
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] <- ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] <- (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] <- abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].  
+#' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
-#' @param target        numerical. The target release constant.
-#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param spill_targ    numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
-#' @param R_max         numerical. The maximum controlled release.
+#' @param R_max         numerical. The maximum controlled release, in the same units as target.
 #' @param weights       vector of length 3 indicating weighting to be applied to release, spill and water level objectives respectively.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
@@ -16,7 +16,7 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
-#' @return Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
+#' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 #' @examples \donttest{ #
 #' 
 #' }
@@ -25,7 +25,7 @@
 #' @export
 dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
                      R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
-                     weights = c(4, 2, 1), loss_exp = c(2, 2, 2),
+                     weights = c(0.7, 0.2, 0.1), loss_exp = c(2, 2, 2),
                      S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE,
                      rep_rrv = FALSE) {
   

@@ -4,17 +4,17 @@
 \alias{storage}
 \title{Storage-Reliability-Yield (SRY) relationships: Storage computation}
 \usage{
-storage(Q, yield, reliability, profile, plot = TRUE, S_initial = 1,
+storage(Q, yield, reliability, demand_profile, plot = TRUE, S_initial = 1,
   max_iterations = 50, double_cycle = FALSE)
 }
 \arguments{
-\item{Q}{time series or vector. The net inflows to the reservoir. This must be a time series object or vector of the net inflow volumes.}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{yield}{numerical.  (must be same volumetric unit as Q and R).}
+\item{yield}{the required yield. Must be same volumetric units as Q.}
 
 \item{reliability}{numerical. The required time-based reliability.}
 
-\item{profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
+\item{demand_profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 

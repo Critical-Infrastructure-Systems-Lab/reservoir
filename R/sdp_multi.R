@@ -1,10 +1,10 @@
-#' @title Stochastic Dynamic Programming with multiple objectives (supply, flood control, amenity).
-#' @description Derives the optimal release policy based on storage state and within-year period only. The objective is to minimise a penalty cost function based on water supply, spill, and water level.
+#' @title Stochastic Dynamic Programming with multiple objectives (supply, flood control, amenity)
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] <- ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] <- (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] <- abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].  
 #' @param Q             time series object. Net inflow to the reservoir.
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
-#' @param target        numerical. The target release constant.
-#' @param surface_area  numerical. The reservoir water surface area at maximum capacity.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
+#' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
+#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param spill_targ    numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
@@ -17,7 +17,7 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
-#' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.
+#' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @seealso \code{\link{dp_multi}} for deterministic Dynamic Programming.
@@ -28,11 +28,11 @@
 #' }
 #' @import stats
 #' @export
-sdp_multi <- function (Q, capacity, target, R_max = 2 * target, surface_area, max_depth, evap,
-                              spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,
-                              weights = c(4, 2, 1), S_disc = 1000, R_disc = 10,
-                              Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                              loss_exp = c(2,2,2), S_initial = 1, plot = TRUE, tol = 0.99, rep_rrv = FALSE){
+sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
+                       R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,
+                       weights = c(0.7, 0.2, 0.1), S_disc = 1000, R_disc = 10,
+                       Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
+                       loss_exp = c(2,2,2), S_initial = 1, plot = TRUE, tol = 0.99, rep_rrv = FALSE){
   
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")

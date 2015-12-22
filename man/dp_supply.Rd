@@ -4,8 +4,8 @@
 \alias{dp_supply}
 \title{Dynamic Programming for water supply reservoirs}
 \usage{
-dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
-  S_initial = 1, surface_area, max_depth, evap, plot = TRUE,
+dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
+  R_disc = 10, loss_exp = 2, S_initial = 1, plot = TRUE,
   rep_rrv = FALSE)
 }
 \arguments{
@@ -15,6 +15,12 @@ dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 
 \item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
 
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
+
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
+
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
 \item{R_disc}{integer. Release discretization. Default = 10 divisions.}
@@ -23,18 +29,12 @@ dp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
-\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
-
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
-
-\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
-
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
 \item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }
 \value{
-Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
+Returns the reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 }
 \description{
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict. Follow the recommended units for each parameter if using evap and surface_area.

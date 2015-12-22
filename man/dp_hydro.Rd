@@ -25,7 +25,7 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 
 \item{qmax}{numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{efficiency}{numerical. The hydropower plant efficiency. Default = 0.9.}
 
@@ -38,10 +38,10 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 }
 \value{
-Returns the time series of optimal releases and, if requested, the reliability, resilience and vulnerability of the system.
+Returns the time series of optimal releases and simulated storage, evaporation, depth, uncontrolled spill, and power generated. Total energy generated is also returned.
 }
 \description{
-Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
+Determines the optimal sequence of turbined releases to maximise the total energy produced by the reservoir.
 }
 \examples{
 \donttest{layout(1:4)

@@ -4,17 +4,17 @@
 \alias{yield}
 \title{Storage-Reliability-Yield (SRY) relationships: Yield computation}
 \usage{
-yield(Q, capacity, reliability, profile, plot = TRUE, S_initial = 1,
+yield(Q, capacity, reliability, demand_profile, plot = TRUE, S_initial = 1,
   max_iterations = 50, double_cycle = FALSE)
 }
 \arguments{
-\item{Q}{a time series or vector  of net inflows to the reservoir.}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir.}
 
-\item{capacity}{numerical.  (must be same volumetric unit as Q and R).}
+\item{capacity}{numerical. The reservoir storage capacity. Must be in the same volumetric units as Q.}
 
-\item{reliability}{numerical.}
+\item{reliability}{numerical. The required time-based reliability.}
 
-\item{profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
+\item{demand_profile}{a vector of factors with length = frequency(Q). Represents within-year demand profile. Defaults to constant release if left blank.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
@@ -38,6 +38,6 @@ yield_ResX <- yield(resX$Q_Mm3, capacity = 500, reliability = 0.95)
 
 quart_ts <- aggregate(resX$Q_Mm3, nfrequency = 4)
 yld <- yield(quart_ts,
-capacity = 500, reliability = 0.9, profile = c(0.8, 1.2, 1.2, 0.8))
+capacity = 500, reliability = 0.9, demand_profile = c(0.8, 1.2, 1.2, 0.8))
 }
 

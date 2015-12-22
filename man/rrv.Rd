@@ -8,17 +8,17 @@ rrv(Q, target, capacity, double_cycle = FALSE, surface_area, max_depth, evap,
   plot = TRUE, S_initial = 1, policy)
 }
 \arguments{
-\item{Q}{time series or vector. The net inflows to the reservoir.}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{target}{numerical constant, or a time series or vector of the target releases. Must be the same length as Q is given as a vector or time series.}
+\item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
 
 \item{capacity}{numerical. The reservoir capacity. Should be same volumetric unit as Q and R.}
 
 \item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
 
-\item{surface_area}{numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.}
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. Must be in meters. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 

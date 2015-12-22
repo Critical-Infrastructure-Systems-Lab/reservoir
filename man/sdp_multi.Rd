@@ -2,11 +2,11 @@
 % Please edit documentation in R/sdp_multi.R
 \name{sdp_multi}
 \alias{sdp_multi}
-\title{Stochastic Dynamic Programming with multiple objectives (supply, flood control, amenity).}
+\title{Stochastic Dynamic Programming with multiple objectives (supply, flood control, amenity)}
 \usage{
-sdp_multi(Q, capacity, target, R_max = 2 * target, surface_area, max_depth,
-  evap, spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,
-  weights = c(4, 2, 1), S_disc = 1000, R_disc = 10, Q_disc = c(0,
+sdp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
+  target, spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,
+  weights = c(0.7, 0.2, 0.1), S_disc = 1000, R_disc = 10, Q_disc = c(0,
   0.2375, 0.475, 0.7125, 0.95, 1), loss_exp = c(2, 2, 2), S_initial = 1,
   plot = TRUE, tol = 0.99, rep_rrv = FALSE)
 }
@@ -15,21 +15,21 @@ sdp_multi(Q, capacity, target, R_max = 2 * target, surface_area, max_depth,
 
 \item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
 
-\item{target}{numerical. The target release constant.}
+\item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{R_max}{numerical. The maximum controlled release.}
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
 
-\item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
-
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
+
+\item{R_max}{numerical. The maximum controlled release.}
 
 \item{spill_targ}{numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.}
 
 \item{vol_targ}{numerical. The target storage volume constant (as proportion of capacity).}
 
-\item{Markov}{logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.}
+\item{Markov}{logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.}
 
 \item{weights}{vector of length 3 indicating weighting to be applied to release, spill and water level objectives respectively.}
 
@@ -53,7 +53,7 @@ sdp_multi(Q, capacity, target, R_max = 2 * target, surface_area, max_depth,
 Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy.
 }
 \description{
-Derives the optimal release policy based on storage state and within-year period only. The objective is to minimise a penalty cost function based on water supply, spill, and water level.
+Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] <- ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] <- (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] <- abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].
 }
 \examples{
 \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years

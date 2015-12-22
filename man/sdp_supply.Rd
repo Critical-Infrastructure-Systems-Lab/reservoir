@@ -4,17 +4,23 @@
 \alias{sdp_supply}
 \title{Stochastic Dynamic Programming for water supply reservoirs}
 \usage{
-sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
-  0.2375, 0.475, 0.7125, 0.95, 1), loss_exp = 2, S_initial = 1,
-  surface_area, max_depth, evap, plot = TRUE, tol = 0.99, Markov = FALSE,
-  rep_rrv = FALSE)
+sdp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
+  R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  loss_exp = 2, S_initial = 1, plot = TRUE, tol = 0.99,
+  Markov = FALSE, rep_rrv = FALSE)
 }
 \arguments{
-\item{Q}{time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{capacity}{numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).}
+\item{capacity}{numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).}
 
-\item{target}{numerical. The target release constant.}
+\item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
+
+\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
+
+\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+
+\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
@@ -26,17 +32,11 @@ sdp_supply(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0,
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
 
-\item{surface_area}{numerical. The reservoir water surface area at maximum capacity.}
-
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.}
-
-\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
-
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 
 \item{tol}{numerical. The tolerance for policy convergence. The default value is 0.990.}
 
-\item{Markov}{logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The defaul is FALSE.}
+\item{Markov}{logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.}
 
 \item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }

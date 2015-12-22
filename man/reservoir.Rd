@@ -27,7 +27,7 @@ The \code{\link{dp_multi}} and \code{\link{sdp_multi}} functions allow users to 
 
 \section{Storage-depth-area relationships}{
 
-All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, allow the user to account for evaporation losses from the reservoir surface. The package incorporates two storage-depth-area relationships for adjusting the surface area (and therefore evaporation potential) with storage. The simplest is based the half-pyramid method [Liebe et al, 2005] the reservoir, requiring the user to input the surface area of the reservoir at full capacity, using the \code{surface_area} parameter. A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity using the \code{max_depth} input variable.
+All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, \code{\link{storage}}, and \code{\link{yield}}, allow the user to account for evaporation losses from the reservoir surface. The package incorporates two storage-depth-area relationships for adjusting the surface area (and therefore evaporation potential) with storage. The simplest is based the half-pyramid method [Liebe et al, 2005] the reservoir, requiring the user to input the surface area of the reservoir at full capacity, using the \code{surface_area} parameter. A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity using the \code{max_depth} input variable.
 Users must use the recommended units when implementing evaporation losses.
 }
 \examples{
@@ -84,7 +84,7 @@ plot (pareto_results$reliability,pareto_results$vulnerability, type = "b", lty =
 \references{
 Hurst, H.E. (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.
 
-Kaveh, K., H. Hosseinjanzadeh, and K. Hosseini. (2013) A new equation for calculation of reservoir’s area-capacity curves, KSCE Journal of Civil Engineering 17(5), 1149-1156.
+Kaveh, K., H. Hosseinjanzadeh, and K. Hosseini. (2013) A new equation for calculation of reservoir's area-capacity curves, KSCE Journal of Civil Engineering 17(5), 1149-1156.
 
 Liebe, J., N. Van De Giesen, and Marc Andreini. (2005) Estimation of small reservoir storage capacities in a semi-arid environment: A case study in the Upper East Region of Ghana, Physics and Chemistry of the Earth, 30(6), 448-454.
 

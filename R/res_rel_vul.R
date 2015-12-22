@@ -1,10 +1,10 @@
 #' @title Reliability, resilience, and vulnerability analysis for water supply reservoirs
 #' @description Computes time-based, annual, and volumetric reliability, as well as resilience and dimensionless vulnerability for a single reservoir.
-#' @param Q                  time series or vector. The net inflows to the reservoir.
-#' @param target             numerical constant, or a time series or vector of the target releases. Must be the same length as Q is given as a vector or time series.
+#' @param Q                  vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
+#' @param target             numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param capacity           numerical. The reservoir capacity. Should be same volumetric unit as Q and R.
-#' @param surface_area       numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
-#' @param max_depth          numerical. The maximum water depth of the reservoir at the dam at maximum capacity. Must be in meters. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param surface_area       numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
+#' @param max_depth          numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap               vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param double_cycle       logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series) 
 #' @param plot               logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
