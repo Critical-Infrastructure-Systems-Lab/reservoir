@@ -7,7 +7,7 @@
 Rippl(Q, target, R, double_cycle = FALSE, plot = TRUE)
 }
 \arguments{
-\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir.}
 
 \item{target}{a target release constant in same volumteric units as Q. Can be omitted if R is given.}
 

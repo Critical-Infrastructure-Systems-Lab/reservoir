@@ -4,7 +4,7 @@
 #' @param target             numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param capacity           numerical. The reservoir capacity. Should be same volumetric unit as Q and R.
 #' @param surface_area       numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
-#' @param max_depth          numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param max_depth          numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap               vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param double_cycle       logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series) 
 #' @param plot               logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
@@ -76,15 +76,9 @@ rrv <- function(Q, target, capacity, double_cycle = FALSE,
             vulnerability <- mean(max.deficits)
         }
     }
-    
-    
-    
-    
-    #===============================================================================
-    
 
-    
-    
+    #===============================================================================
+  
     results <- list(rel_ann, rel_time, rel_vol, resilience, vulnerability,
                     S, R, Spill)
     names(results) <- c("annual_reliability",

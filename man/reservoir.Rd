@@ -20,14 +20,16 @@ The \code{\link{Hurst}} function estimates the Hurst coefficient [Hurst, 1951] f
 \section{Optimization functions}{
 
 The Dynamic Programming functions find the optimal sequence of releases for a given reservoir. The Stochastic Dynamic Programming functions find the optimal release policy for a given reservoir, based on storage, within-year time period and, optionally, current-period inflow.
-For single-objective water supply reservoirs, users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions to minimize summed penalty costs over the operating horizon. This can be done using Dynamic Programming (\code{\link{dp_supply}}) or Stochastic Dynamic Programming (\code{\link{sdp_supply}}). There is also an option to simulate the output of \code{\link{sdp_supply}} using the \code{\link{rrv}} function to validate the policy under alternative inflows or analyze reservoir performance under different operating objectives.
-The optimal operating policy for hydropower operations can be found using Dynamic Programming \code{\link{dp_hydro}} or Stochastic Dynamic Programming \code{\link{sdp_hydro}}. The operating target is to maximise total energy output over the duration of the input time series of inflows.
+For single-objective water supply reservoirs, users may specify a loss exponent parameter for supply deficits and then optimize reservoir release decisions to minimize summed penalty costs over the operating horizon. This can be done using \code{\link{dp_supply}} or \code{\link{sdp_supply}}. There is also an option to simulate the output of \code{\link{sdp_supply}} using the \code{\link{rrv}} function to validate the policy under alternative inflows or analyze reservoir performance under different operating objectives.
+The optimal operating policy for hydropower operations can be found using \code{\link{dp_hydro}} or \code{\link{sdp_hydro}}. The operating target is to maximise total energy output over the duration of the input time series of inflows.
 The \code{\link{dp_multi}} and \code{\link{sdp_multi}} functions allow users to optimize for three weighted objectives representing water supply deficit, flood control, and amenity.
 }
 
 \section{Storage-depth-area relationships}{
 
-All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, \code{\link{storage}}, and \code{\link{yield}}, allow the user to account for evaporation losses from the reservoir surface. The package incorporates two storage-depth-area relationships for adjusting the surface area (and therefore evaporation potential) with storage. The simplest is based the half-pyramid method [Liebe et al, 2005] the reservoir, requiring the user to input the surface area of the reservoir at full capacity, using the \code{surface_area} parameter. A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity using the \code{max_depth} input variable.
+All reservoir analysis and optimization functions, with the exception of \code{\link{Rippl}}, \code{\link{storage}}, and \code{\link{yield}}, allow the user to account for evaporation losses from the reservoir surface. The package incorporates two storage-depth-area relationships for adjusting the surface area (and therefore evaporation potential) with storage.
+The simplest is based on the half-pyramid method [Liebe et al, 2005], requiring the user to input the surface area of the reservoir at full capacity via the \code{surface_area} parameter.
+A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity via the \code{max_depth} parameter.
 Users must use the recommended units when implementing evaporation losses.
 }
 \examples{

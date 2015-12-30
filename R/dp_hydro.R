@@ -4,10 +4,10 @@
 #' @param capacity      numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
-#' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
+#' @param efficiency    numerical. The hydropower plant efficiency. Default is 0.9, but, unless user specifies an efficiency, it will be automatically re-estimated if head and qmax are supplied.
 #' @param head          numerical. The maximum hydraulic head of the hydropower plant (m). Can be omitted and estimated if qmax is supplied.
 #' @param qmax          numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
@@ -19,7 +19,7 @@
 #' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 #' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 #' }
-#' @seealso \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs
+#' @seealso \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs.
 #' @import stats 
 #' @export
 dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
@@ -140,7 +140,6 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   for (t in 1:length(Q)) {
     S_state <- round(1 + ( (S[t] / capacity) * (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
-    #E[t] <- GetArea(c, S[t] * (10 ^ 6)) * evap[t] / 10 ^ 6
     E[t] <- GetEvap(s = S[t], q = Q[t], r = R[t], ev = evap[t])
     y[t] <- GetLevel(c, S[t] * (10 ^ 6))
     

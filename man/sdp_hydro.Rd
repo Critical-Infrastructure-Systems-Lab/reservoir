@@ -18,7 +18,7 @@ sdp_hydro(Q, capacity, capacity_live = capacity, surface_area, max_depth,
 
 \item{surface_area}{numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{evap}{vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.}
 
@@ -28,7 +28,7 @@ sdp_hydro(Q, capacity, capacity_live = capacity, surface_area, max_depth,
 
 \item{qmax}{numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.}
 
-\item{efficiency}{numerical. The hydropower plant efficiency. Default = 0.9.}
+\item{efficiency}{numerical. The hydropower plant efficiency. Default is 0.9, but, unless user specifies an efficiency, it will be automatically re-estimated if head and qmax are supplied.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 

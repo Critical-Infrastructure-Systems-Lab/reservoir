@@ -4,7 +4,7 @@
 #' @param capacity      numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).
 #' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
@@ -260,14 +260,9 @@ sdp_supply <- function (Q, capacity, target, surface_area, max_depth, evap,
         R <- R_disc_x[R_policy[S_state,Q_class,month]]
       }
       R_rec[t_index] <- R
-      
+      E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
+      y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
 
-        #E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
-        E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
-        
-        y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
-
-      
       if ( (S[t_index] - R + Qx - E[t_index]) > capacity) {
         S[t_index + 1] <- capacity
         Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]

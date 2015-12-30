@@ -17,7 +17,7 @@ dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
 
 \item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
@@ -37,7 +37,7 @@ dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
 Returns the reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 }
 \description{
-Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict. Follow the recommended units for each parameter if using evap and surface_area.
+Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
 \donttest{layout(1:3)

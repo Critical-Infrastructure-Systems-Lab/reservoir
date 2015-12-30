@@ -19,7 +19,7 @@ sdp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
 
 \item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
 \item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
 
@@ -53,13 +53,11 @@ sdp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
 Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy.
 }
 \description{
-Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] <- ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] <- (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] <- abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].
+Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] = ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] = (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] = abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].
 }
 \examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- sdp_simple_multi(ResX_inflow.ts, capacity = storage_cap,
-target = demand, R_max = 2 * demand)
+\donttest{layout(1:3)
+sdp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
 }
 }
 \seealso{

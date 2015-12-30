@@ -4,10 +4,10 @@
 #' @param capacity      numerical. The total reservoir storage capacity (including unusable "dead" storage). Must be in Mm^3.
 #' @param capacity_live numerical. The volume of usable water in the reservoir ("live capacity" or "active storage"). capacity_live <= capacity. Default capacity_live = capacity. Must be in Mm^3.
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant, representing evaporation loss potential from reservoir surface. Varies with level if depth and surface_area parameters are specified. Must be in meters, or kg/m2 * 10 ^ -3.
 #' @param installed_cap numerical. The hydropower plant electric capacity (MW).
-#' @param efficiency    numerical. The hydropower plant efficiency. Default = 0.9.
+#' @param efficiency    numerical. The hydropower plant efficiency. Default is 0.9, but, unless user specifies an efficiency, it will be automatically re-estimated if head and qmax are supplied.
 #' @param head          numerical. The maximum hydraulic head of the hydropower plant (m). Can be omitted if qmax is supplied.
 #' @param qmax          numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
@@ -276,9 +276,6 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         R <- R_disc_x[R_policy[S_state,Q_class,month]]
       }
       R_rec[t_index] <- R
-      
-      
-      #E[t_index] <- GetArea(c, S[t_index] * 10 ^ 6) * evap[t_index] / 10 ^ 6
       E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
       y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
       

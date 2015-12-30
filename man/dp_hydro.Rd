@@ -25,9 +25,9 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 
 \item{qmax}{numerical. The maximum flow into the hydropower plant. Can be omitted and estimated if head is supplied. Must be in volumetric units of Mm^3.}
 
-\item{max_depth}{numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
+\item{max_depth}{numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
 
-\item{efficiency}{numerical. The hydropower plant efficiency. Default = 0.9.}
+\item{efficiency}{numerical. The hydropower plant efficiency. Default is 0.9, but, unless user specifies an efficiency, it will be automatically re-estimated if head and qmax are supplied.}
 
 \item{S_disc}{integer. Storage discretization--the number of equally-sized storage states. Default = 1000.}
 
@@ -50,6 +50,6 @@ installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 }
 }
 \seealso{
-\code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs
+\code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs.
 }
 

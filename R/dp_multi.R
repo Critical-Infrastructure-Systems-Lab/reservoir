@@ -1,10 +1,10 @@
 #' @title Dynamic Programming with multiple objectives (supply, flood control, amenity)
-#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] <- ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] <- (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] <- abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].  
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] = ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] = (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] = abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].  
 #' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
 #' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
 #' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param spill_targ    numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.
 #' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
@@ -17,8 +17,8 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
-#' @examples \donttest{ #
-#' 
+#' @examples \donttest{layout(1:3)
+#' dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
 #' }
 #' @seealso \code{\link{sdp_multi}} for Stochastic Dynamic Programming
 #' @import stats
@@ -215,8 +215,6 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
     names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability")
-    
-    
     
   } else {
     results <- list(S, R, E, y, Spill, costs)

@@ -1,6 +1,6 @@
 #' @title Rippl analysis
 #' @description Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorithm. 
-#' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
+#' @param Q             vector or time series object. Net inflow totals to the reservoir.
 #' @param target        a target release constant in same volumteric units as Q. Can be omitted if R is given.
 #' @param R             a time series or vector of target releases (volumetric). Must be the same length as Q.
 #' @param double_cycle  logical. If TRUE the Q and R time series will be replicated and placed end-to-end to double the simulation. Recommended if the critical period occurs at the end of the sequence.

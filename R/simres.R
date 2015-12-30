@@ -1,10 +1,10 @@
 #' @title Simulate a water supply reservoir with specified operating policy.
-#' @description Simulates a reservoir for a given time series and assuming Standard Operating Policy (meet target at all times, unless constrained by available water in reservoir plus incoming flows). 
+#' @description Simulates a reservoir for a given inflow time series and assuming Standard Operating Policy (meet target at all times, unless constrained by available water in reservoir plus incoming flows) or an optimised policy deived using \code{\link{sdp_supply}}. 
 #' @param Q             vector or time series object. Net inflow totals to the reservoir. Mm^3 (Million cubic meters).
 #' @param target        numerical constant, or a time series or vector of the target releases. Must be the same length as Q is given as a vector or time series. Mm^3 (Million cubic meters).
 #' @param capacity      numerical. The reservoir capacity. Should be same volumetric unit as Q. Mm^3 (Million cubic meters).
 #' @param surface_area  numerical. The reservoir surface area at full capacity. Must be in square kilometers (km^2), or Mm^2.
-#' @param max_depth     numerical. The maximum water depth of the reservoir at the dam at maximum capacity. Must be in meters. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
+#' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. Must be in meters. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
 #' @param S_initial     numerical. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.
 #' @param double_cycle  logical. If TRUE the Q and R time series will be replicated and placed end-to-end to double the simulation. Recommended if the critical period occurs at the end of the sequence.
