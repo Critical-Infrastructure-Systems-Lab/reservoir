@@ -25,6 +25,7 @@
 #' sdp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
 #' }
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
                        R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,

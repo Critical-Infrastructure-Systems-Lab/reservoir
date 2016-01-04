@@ -17,6 +17,7 @@
 #' target = 0.95 * mean(resX$Q_Mm3), Markov = TRUE)
 #' rrv(resX$Q_Mm3, capacity = 20*resX$cap_Mm3, target = 0.95 * mean(resX$Q_Mm3), policy = pol_Markov)
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 rrv <- function(Q, target, capacity, double_cycle = FALSE,
                 surface_area, max_depth, evap,

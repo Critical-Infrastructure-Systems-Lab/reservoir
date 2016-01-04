@@ -36,6 +36,7 @@
 #' simSDP <- simRes(Q_post1980, capacity = res_cap, target = targ,
 #' surface_area = area, max_depth = max_d, evap = ev, policy = policy_x)
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 simRes <- function(Q, target, capacity, surface_area, max_depth, evap,
                    double_cycle = FALSE, plot = TRUE, S_initial = 1, policy) {

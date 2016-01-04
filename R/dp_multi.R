@@ -22,6 +22,7 @@
 #' }
 #' @seealso \code{\link{sdp_multi}} for Stochastic Dynamic Programming
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
                      R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
