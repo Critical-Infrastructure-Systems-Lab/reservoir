@@ -1,7 +1,7 @@
 Package: reservoir
 Type: Package
 Title: Tools for Analysis, Design, and Operation of Water Supply Storages
-Version: 1.1.0
+Version: 1.1.1
 Date: 2015-12-22
 Authors@R: c(
     person("Sean", "Turner", , "swd.turner@gmail.com", c("aut", "cre")),
