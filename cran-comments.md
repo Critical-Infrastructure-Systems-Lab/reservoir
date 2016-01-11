@@ -1,4 +1,6 @@
-This is the first update to "reservoir".
+## Resubmission
+This is a resubmission to correct an error identified by Prof Brian Ripley (ripley@stats.ox.ac.uk).
+I have corrected an error in example(reservoir) and added comment to justify use of donttest/.
 
 ## Test environments
 * x86_64-w64-mingw32 (64-bit), R version 3.2.1
