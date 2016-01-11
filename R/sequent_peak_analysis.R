@@ -7,7 +7,7 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram is plotted.
 #' @return Returns the no-fail storage capacity and corresponding storage behaviour time series.
 #' @examples # define a release vector for a constant release equal to 90 % of the mean inflow
-#' no_fail_storage <- Rippl(resX$Q_Mm3, target = 0.9 * mean(resX$Q_Mm3))
+#' no_fail_storage <- Rippl(resX$Q_Mm3, target = 0.9 * mean(resX$Q_Mm3))$No_fail_storage
 #' @import stats
 #' @export
 Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
@@ -51,6 +51,6 @@ Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
         plot(Spill, ylab = "Uncontrolled spill")
     }
     results <- list(max(K),(max(K) - K), Spill)
-    names(results) <- c("Rippl_K","Storage_behavior", "Uncontrolled_spill")
+    names(results) <- c("No_fail_storage","Storage_behavior", "Uncontrolled_spill")
     return(results)
 }

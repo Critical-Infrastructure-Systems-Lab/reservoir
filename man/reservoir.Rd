@@ -52,7 +52,7 @@ no_fail_storage <- x_Rippl$Rippl_storage
 no_fail_storage <- vector("numeric", 500)
 for (i in 1:length(no_fail_storage)){
   x <- ts(rlnorm(1200), start = c(1900, 1), frequency = 12)
-  no_fail_storage[i] <- Rippl(x, target = mean(x) * 0.9 ,plot = FALSE)$Rippl_storage
+  no_fail_storage[i] <- Rippl(x, target = mean(x) * 0.9 ,plot = FALSE)$No_fail_storage
 }
 hist(no_fail_storage)
 
@@ -81,6 +81,8 @@ for (loss_f in loss_exponents){
  pareto_results$vulnerability[which(row.names(pareto_results)==loss_f)] <- sdp_temp$vulnerability
  }
 plot (pareto_results$reliability,pareto_results$vulnerability, type = "b", lty = 3)
+
+# Note: donttest/ applied to avoid check time > 5s.
 }
 }
 \references{
