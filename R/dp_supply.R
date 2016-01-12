@@ -139,7 +139,7 @@ dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
       S[t + 1] <- max(0, S[t] - R[t] + Q[t] - E[t])
     }
   }
-  S <- ts(S[1:length(S) - 1], start = start(Q), frequency = frequency(Q))
+  S <- ts(S[1:(length(S) - 1)], start = start(Q), frequency = frequency(Q))
   R <- ts(R, start = start(Q), frequency = frequency(Q))
   E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))

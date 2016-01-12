@@ -317,7 +317,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
   }
   
   R_policy <- (R_policy - 1) / R_disc
-  S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
+  S <- ts(S[1:(length(S) - 1)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))

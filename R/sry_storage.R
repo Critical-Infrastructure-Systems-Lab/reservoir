@@ -76,7 +76,7 @@ storage <- function(Q, yield, reliability, demand_profile,
             break
         }
     }
-    S <- ts(S[1:length(S) - 1], start = start(Q), frequency = frequency(Q))
+    S <- ts(S[1:(length(S) - 1)], start = start(Q), frequency = frequency(Q))
     R <- ts(R, start = start(Q), frequency = frequency(Q))
     Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
     

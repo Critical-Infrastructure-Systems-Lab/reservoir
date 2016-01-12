@@ -43,7 +43,7 @@ Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
             Spill[t] <- abs(R[t] - Q[t] + K[t])
         }
     }
-    K <- ts(K[1:length(K) - 1], start = start(Q), frequency = frequency(Q))
+    K <- ts(K[1:(length(K) - 1)], start = start(Q), frequency = frequency(Q))
     Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
     if (plot) {
         plot(max(K) - K, ylab = "Storage", main = paste0("No Fail Storage = ", round(max(K),3)))

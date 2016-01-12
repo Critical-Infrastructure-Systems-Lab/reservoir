@@ -78,7 +78,7 @@ yield <- function(Q, capacity, reliability, demand_profile,
         }
     }
     
-    S <- ts(S[1:length(S) - 1], start = start(Q), frequency = frequency(Q))
+    S <- ts(S[1:(length(S) - 1)], start = start(Q), frequency = frequency(Q))
     R <- ts(R, start = start(Q), frequency = frequency(Q))
     Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
     

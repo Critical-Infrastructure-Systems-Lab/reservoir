@@ -291,11 +291,11 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
           S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
         }
       }
-      Power[t_index] <- efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:t_index + 1]) * (10 ^ 6)) + yconst) * R_rec[t_index] / (365.25 / frq * 24 * 60 * 60)
+      Power[t_index] <- efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:(t_index + 1)]) * (10 ^ 6)) + yconst) * R_rec[t_index] / (365.25 / frq * 24 * 60 * 60)
     }
   }
   R_policy <- (R_policy - 1) / R_disc
-  S <- ts(S[1:length(S) - 1],start = start(Q),frequency = frq)
+  S <- ts(S[1:(length(S) - 1)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
   E <- ts(E, start = start(Q), frequency = frq)
   y <- ts(y, start = start(Q), frequency = frq)
