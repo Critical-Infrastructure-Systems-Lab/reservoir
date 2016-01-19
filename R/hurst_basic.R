@@ -2,9 +2,7 @@
 #' @description Hurst coefficient estimation.
 #' @param Q   vector or annualized time series object. Net inflows or streamflow totals.
 #' @return Returns an estimate of the Hurst coefficient, H (0.5 < H < 1).
-#' @references H.E.Hurst (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.
-#' @references Pfaff, B. (2008) Analysis of integrated and cointegrated time series with R, Springer, New York. [p.68]
-#' @examples Q_annual <- aggregate(ResX_inflow.ts) #convert monthly to annual data
+#' @examples Q_annual <- aggregate(resX$Q_Mm3) #convert monthly to annual data
 #' Hurst(Q_annual)
 #' @import stats
 #' @export

@@ -1,20 +1,23 @@
 Package: reservoir
 Type: Package
 Title: Tools for Analysis, Design, and Operation of Water Supply Storages
-Version: 1.0.0
-Date: 2015-07-23
+Version: 1.1.1
+Date: 2015-12-22
 Authors@R: c(
     person("Sean", "Turner", , "swd.turner@gmail.com", c("aut", "cre")),
+    person("Jia Yi", "Ng", , "ngjiayi93@hotmail.com", "aut"),
     person("Stefano", "Galelli", , "stefano_galelli@sutd.edu.sg", "aut")
     )
-URL: https://github.com/swd-turner/reservoir
-Description: Measure single-storage water supply system performance using resilience, reliability,
-    and vulnerability metrics; assess storage-yield-reliability relationships; 
-    determine no-fail storage with sequent peak analysis; optimize release
-    decisions using deterministic and stochastic dynamic programming; evaluate
-    inflow persistence using the Hurst coefficient.
+URL: https://cran.r-project.org/package=reservoir
+Description: Measure single-storage water supply system performance using resilience,
+    reliability, and vulnerability metrics; assess storage-yield-reliability
+    relationships; determine no-fail storage with sequent peak analysis; optimize
+    release decisions for water supply, hydropower, and multi-objective reservoirs
+    using deterministic and stochastic dynamic programming; evaluate inflow
+    persistence using the Hurst coefficient.
 License: GPL (>= 2)
 LazyData: yes
 Imports:
     gtools,
-    stats
+    stats,
+    graphics

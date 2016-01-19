@@ -1,39 +1,32 @@
-#' @title Dynamic Programming with multiple objectives (supply, flood control, amenity)
-#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] = ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] = (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] = abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].  
+#' @title Dynamic Programming for water supply reservoirs
+#' @description Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 #' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
-#' @param capacity      numerical. The reservoir storage capacity (must be the same volumetric unit as Q and the target release).
+#' @param capacity      numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).
 #' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
 #' @param surface_area  numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).
 #' @param max_depth     numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.
 #' @param evap          vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.
-#' @param spill_targ    numerical. The quantile of the inflow time series used to standardise the "minimise spill" objective.
-#' @param vol_targ      numerical. The target storage volume constant (as proportion of capacity).
-#' @param R_max         numerical. The maximum controlled release, in the same units as target.
-#' @param weights       vector of length 3 indicating weighting to be applied to release, spill and water level objectives respectively.
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
-#' @param loss_exp      vector of length 3 indicating the exponents on release, spill and water level deviations from target. Default exponents are c(2,2,2).
+#' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
-#' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
+#' @return Returns the reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 #' @examples \donttest{layout(1:3)
-#' dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
+#' dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
 #' }
-#' @seealso \code{\link{sdp_multi}} for Stochastic Dynamic Programming
-#' @import stats
-#' @importFrom graphics abline lines
+#' @seealso \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs
+#' @import stats 
 #' @export
-dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
-                     R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
-                     weights = c(0.7, 0.2, 0.1), loss_exp = c(2, 2, 2),
-                     S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE,
-                     rep_rrv = FALSE) {
+dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
+                      S_disc = 1000, R_disc = 10, loss_exp = 2, S_initial = 1,
+                      plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
   }
-  
+
   if (missing(evap)) {
     evap <- rep(0, length(Q))
   }
@@ -43,21 +36,14 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   if (length(evap) != length(Q)){
     stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
   }
+
   if (missing(surface_area)) {
     surface_area <- 0
   }
   
-  
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
-  R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
-  
-  if (target %in% R_disc_x == FALSE) {
-    warning("Warning: target not contained in R_disc")
-  }
-  
-  R_costs <- (target - R_disc_x) / target
-  R_costs[which(R_costs < 0)] <- 0
-  R_costs <- R_costs ^ loss_exp[1]
+  R_disc_x <- seq(from = 0, to = target, by = target / R_disc)
+  R_costs <- ( ( (target - R_disc_x) / target) ^ loss_exp)
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat <- apply(State_mat, 2, "+", S_states)
   State_mat <- t(apply(State_mat, 1, "-", R_disc_x))
@@ -104,10 +90,9 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
     }
     return(e)
   }
-  
+
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
-  
-  
+
   # POLICY OPTIMIZATION----------------------------------------------------------------
   
   for (t in length(Q):1) {
@@ -116,16 +101,11 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
     Balance_mat <- State_mat + Q[t] - (evap[t] * S_area_rel / 10 ^ 6)
     Cost_mat[which(Balance_mat < 0)] <- NaN
     Balance_mat[which(Balance_mat < 0)] <- NaN
-    Cost_mat[which(is.nan(Balance_mat[,1]))] <- 0           
-    Balance_mat[which(is.nan(Balance_mat[,1]))] <- 0        
-    Spill_costs <- Balance_mat - capacity
-    Spill_costs[which(Spill_costs < 0)] <- 0
-    Spill_costs <- (Spill_costs / quantile(Q, spill_targ)) ^ loss_exp[2]
+    Cost_mat[which(is.nan(Balance_mat[,1]))] <- 0           ## Correction to allow zero release under high evap
+    Balance_mat[which(is.nan(Balance_mat[,1]))] <- 0        ## Correction to allow zero release under high evap
     Balance_mat[which(Balance_mat > capacity)] <- capacity
-    Vol_costs <- abs(((Balance_mat - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3]
     Implied_S_state <- round(1 + ((Balance_mat / capacity) *
                                     (length(S_states) - 1)))
-    Cost_mat <- weights[1] * Cost_mat + weights[2] * Spill_costs + weights[3] * Vol_costs
     Cost_mat2 <- Cost_mat + matrix(Cost_to_go[Implied_S_state],
                                    nrow = length(S_states))
     Cost_to_go <- apply(Cost_mat2, 1, min, na.rm = TRUE)
@@ -147,7 +127,11 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
                              (length(S_states) - 1)))
     R[t] <- R_disc_x[R_policy[S_state, t]]
     E[t] <- GetEvap(s = S[t], q = Q[t], r = R[t], ev = evap[t])
+    
+    
+    
     y[t] <- GetLevel(c, S[t] * 10 ^ 6)
+
     if ( (S[t] - R[t] + Q[t] - E[t]) > capacity) {
       S[t + 1] <- capacity
       Spill[t] <- S[t] - R[t] + Q[t] - capacity - E[t]
@@ -160,16 +144,8 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   E <- ts(E, start = start(Q), frequency = frequency(Q))
   y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
+  total_penalty <- sum( ( (target - R) / target) ^ loss_exp)
   # ===================================================================================
-  
-  
-  total_release_cost <- sum((R/target)[which((R/target) <  1)] ^ loss_exp[1])
-  total_spill_cost <- sum((Spill / quantile(Q, spill_targ)) ^ loss_exp[2])
-  total_volume_cost <- sum(((S - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3])
-  total_weighted_cost <- weights[1] * total_release_cost + weights[2] * total_spill_cost + weights[3] * total_volume_cost 
-  costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
-  names(costs) <- c("total_release_cost", "total_spill_cost", "total_volume_cost", "total_weighted_cost")
-  
   
   
   # COMPUTE RRV METRICS FROM SIMULATION RESULTS---------------------------------------
@@ -212,24 +188,27 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
       }
     }
     
-    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, costs)
-    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "annual_reliability",
+    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
+    names(results) <- c("storage", "releases", "evap_loss", "water_level",
+                        "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability")
+                        "resilience", "vulnerability", "total_penalty_cost")
+    
+    
     
   } else {
-    results <- list(S, R, E, y, Spill, costs)
-    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "total_costs")
+    results <- list(S, R, E, y, Spill, total_penalty)
+    names(results) <- c("storage", "releases", "evap_loss",
+                        "water_level", "spill", "total_penalty_cost")
   }
   
   #===============================================================================
   
   
   if (plot) {
-    
-    plot(R, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
-    plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
+    plot(R, ylab = "Controlled release", ylim = c(0, target))
+    plot(S, ylab = "Storage", ylim = c(0, capacity))
     plot(Spill, ylab = "Uncontrolled spill")
   }
   return(results)
-} 
+}

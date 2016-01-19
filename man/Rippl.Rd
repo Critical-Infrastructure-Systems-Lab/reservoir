@@ -4,10 +4,12 @@
 \alias{Rippl}
 \title{Rippl analysis}
 \usage{
-Rippl(Q, R, double_cycle = FALSE, plot = TRUE)
+Rippl(Q, target, R, double_cycle = FALSE, plot = TRUE)
 }
 \arguments{
-\item{Q}{a time series or vector  of net inflows to the reservoir (volumetric).}
+\item{Q}{vector or time series object. Net inflow totals to the reservoir.}
+
+\item{target}{a target release constant in same volumteric units as Q. Can be omitted if R is given.}
 
 \item{R}{a time series or vector of target releases (volumetric). Must be the same length as Q.}
 
@@ -19,18 +21,10 @@ Rippl(Q, R, double_cycle = FALSE, plot = TRUE)
 Returns the no-fail storage capacity and corresponding storage behaviour time series.
 }
 \description{
-Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorith.
+Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorithm.
 }
 \examples{
-# define a release vector for a constant release equal to 70 \% of the mean inflow
-release <- rep(mean(ResX_inflow.ts) * 0.7, length(ResX_inflow.ts))
-no_fail_storage <- Rippl(ResX_inflow.ts,release)
-}
-\references{
-Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.
-
-Thomas H.A., Burden R.P. (1963) Operations research in water quality management. Harvard Water Resources Group, Cambridge
-
-Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
+# define a release vector for a constant release equal to 90 \% of the mean inflow
+no_fail_storage <- Rippl(resX$Q_Mm3, target = 0.9 * mean(resX$Q_Mm3))$No_fail_storage
 }
 

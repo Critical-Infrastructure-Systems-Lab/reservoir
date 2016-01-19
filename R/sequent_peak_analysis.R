@@ -1,43 +1,56 @@
 #' @title Rippl analysis
-#' @description Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorith. 
-#' @param Q             a time series or vector  of net inflows to the reservoir (volumetric).
+#' @description Computes the Rippl no-failure storage for given time series of inflows and releases using the sequent peak algorithm. 
+#' @param Q             vector or time series object. Net inflow totals to the reservoir.
+#' @param target        a target release constant in same volumteric units as Q. Can be omitted if R is given.
 #' @param R             a time series or vector of target releases (volumetric). Must be the same length as Q.
 #' @param double_cycle  logical. If TRUE the Q and R time series will be replicated and placed end-to-end to double the simulation. Recommended if the critical period occurs at the end of the sequence.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram is plotted.
 #' @return Returns the no-fail storage capacity and corresponding storage behaviour time series.
-#' @references Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.
-#' @references Thomas H.A., Burden R.P. (1963) Operations research in water quality management. Harvard Water Resources Group, Cambridge
-#' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
-#' @examples # define a release vector for a constant release equal to 70 % of the mean inflow
-#' release <- rep(mean(ResX_inflow.ts) * 0.7, length(ResX_inflow.ts))
-#' no_fail_storage <- Rippl(ResX_inflow.ts,release)
+#' @examples # define a release vector for a constant release equal to 90 % of the mean inflow
+#' no_fail_storage <- Rippl(resX$Q_Mm3, target = 0.9 * mean(resX$Q_Mm3))$No_fail_storage
 #' @import stats
 #' @export
-Rippl <- function(Q, R, double_cycle = FALSE, plot = TRUE) {
-    if (length(Q) != length(R))
-        stop("Q and R must be of equal length")
+Rippl <- function(Q, target, R, double_cycle = FALSE, plot = TRUE) {
+  
     if (is.ts(Q) == FALSE && is.vector(Q) == FALSE)
         stop("Q must be time series or vector object")
+
+    if (!missing(target) && !missing(R))
+        stop("Supply target or R, not both!")
+    
+    if (!missing(target))
+        R <- rep(target, length(Q))
+    
+    if (length(Q) != length(R))
+      stop("Q and R must be of equal length")
+    
     if (is.ts(R) == FALSE && is.vector(R) == FALSE)
-        stop("R must be time series or vector object")
+      stop("R must be time series or vector object")
+    
     if (double_cycle) {
-        Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
-        R <- c(R, R)
+      Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
+      R <- c(R, R)
     }
+    
+    
     K <- vector("numeric", length = length(Q) + 1)
+    Spill <- vector("numeric", length = length(Q))
     for (t in 1:length(Q)) {
         if (R[t] - Q[t] + K[t] > 0) {
             K[t + 1] <- R[t] - Q[t] + K[t]
         } else {
             K[t + 1] <- 0
+            Spill[t] <- abs(R[t] - Q[t] + K[t])
         }
     }
-    K <- ts(K[2:length(K)], start = start(Q), frequency = frequency(Q))
+    K <- ts(K[1:(length(K) - 1)], start = start(Q), frequency = frequency(Q))
+    Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
     if (plot) {
-        plot(Q, ylab = "inflow", type = "l")
-        plot(max(K) - K, ylab = "storage")
+        plot(max(K) - K, ylab = "Storage", main = paste0("No Fail Storage = ", round(max(K),3)))
+        plot(Q, ylab = "Inflow totals")
+        plot(Spill, ylab = "Uncontrolled spill")
     }
-    results <- list(max(K),(max(K) - K))
-    names(results) <- c("Rippl_storage","Storage_behavior")
+    results <- list(max(K),(max(K) - K), Spill)
+    names(results) <- c("No_fail_storage","Storage_behavior", "Uncontrolled_spill")
     return(results)
 }
