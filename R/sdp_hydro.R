@@ -87,7 +87,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
     S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)                   
     R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
     Shell.array <- array(0,dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
-    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    #R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Rev_to_go <- vector("numeric",length=length(S_states))
     Results_mat <- matrix(0,nrow=length(S_states),ncol=frq)
     R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
@@ -107,7 +107,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
     R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
     Shell.array <- array(0, dim = c(length(S_states), length(R_disc_x),
                                     length(Q.probs)))
-    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    #R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Q_class.mat <- matrix(nrow=length(Q_month_mat[,1]),ncol=frq)
     for (m in 1:frq){
       Q_disc_x <- gtools::quantcut(Q_month_mat[,m], Q_disc)
@@ -190,6 +190,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") - 
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
         S.t_plus_1 <- R.cstr - R.star
         S.t_plus_1[which(S.t_plus_1 < 0)] <- 0
@@ -224,6 +225,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") -
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),] - (capacity - capacity_live))] <- NaN
         S.t_plus_1 <- R.cstr - R.star
         S.t_plus_1[which(S.t_plus_1 < 0)] <- 0

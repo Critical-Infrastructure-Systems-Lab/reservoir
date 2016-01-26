@@ -81,7 +81,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
       warning("target not contained in R_disc; consider a different discretization")
     }
     Shell.array <- array(0,dim=c(length(S_states),length(R_disc_x),length(Q.probs)))
-    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    #R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Cost_to_go <- vector("numeric",length=length(S_states))
     Results_mat <- matrix(0,nrow=length(S_states),ncol=frq)
     R_policy <- matrix(0,nrow=length(S_states),ncol=frq)
@@ -103,7 +103,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
     }
     Shell.array <- array(0, dim = c(length(S_states), length(R_disc_x),
                                     length(Q.probs)))
-    R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
+    #R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))             
     Q_class.mat <- matrix(nrow=length(Q_month_mat[,1]),ncol=frq)
     for (m in 1:frq){
       Q_disc_x <- gtools::quantcut(Q_month_mat[,m], Q_disc)
@@ -129,10 +129,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
     R_policy_test <- R_policy
   }
   
-  
-  # SET UP (Markov)-------------------------------------------------------------------------------  
-  
-  # detail here!
+
   
   # SET UP (storage-depth-area relationships)----------------------------------------------------- 
   
@@ -187,6 +184,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") -
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
         Deficit.arr <- (target - R.star) / target                                           
         Deficit.arr[which(Deficit.arr < 0)] <- 0
@@ -236,6 +234,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
         R.cstr <- sweep(Shell.array, 3, Q_class_med[,t], "+") +
           sweep(Shell.array, 1, S_states, "+") -
           sweep(Shell.array, 1, evap_seas[t] * S_area_rel / 10 ^ 6, "+")
+        R.star <- aperm(apply(Shell.array, c(1, 3), "+", R_disc_x), c(2, 1, 3))
         R.star[,2:(R_disc + 1),][which(R.star[,2:(R_disc + 1),] > R.cstr[,2 : (R_disc + 1),])] <- NaN
         Deficit.arr <- (target - R.star) / target
         Deficit.arr[which(Deficit.arr < 0)] <- 0
