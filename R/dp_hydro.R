@@ -158,7 +158,7 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   y <- ts(y, start = start(Q), frequency = frequency(Q))
   Spill <- ts(Spill, start = start(Q), frequency = frequency(Q))
   Power <- ts(Power, start = start(Q), frequency = frequency(Q))
-  Energy_MWh <- sum(Power * (365.25 / 12) * 24)
+  Energy_MWh <- sum(Power * (365.25 / frequency(Q)) * 24)
   results <- list(S, R, E, y, Spill, Power, Energy_MWh)
   names(results) <- c("Storage_Mm3", "Release_Mm3", "Evap_loss_Mm3", "Water_level_m", "Spill_Mm3", "Power_MW", "Total_Energy_MWh")
   
