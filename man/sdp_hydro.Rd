@@ -51,12 +51,11 @@ Returns the optimal release policy, associated Bellman function, simulated stora
 Determines the optimal policy of turbined releases to maximise the total energy produced by the reservoir. The policy can be based on season and storage level, or season, storage level, and current-period inflow.
 }
 \examples{
-\donttest{layout(1:4)
+layout(1:4)
 sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
-}
 }
 \seealso{
 \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.

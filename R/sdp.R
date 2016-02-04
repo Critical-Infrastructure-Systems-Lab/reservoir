@@ -14,11 +14,7 @@
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @references Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 #' @references Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R programming tools. R package version 3.4.1. http://CRAN.R-project.org/package=gtools
-#' @seealso \code{\link{sdp}} for deterministic Dynamic Programming 
-#' @examples \donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-#' demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-#' optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
-#' }
+#' @seealso \code{\link{sdp}} for deterministic Dynamic Programming
 #' @import stats
 #' @export
 sdp <- function (Q, capacity, target, S_disc = 1000, R_disc = 10,

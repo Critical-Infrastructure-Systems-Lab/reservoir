@@ -49,9 +49,8 @@ Returns reservoir simulation output (storage, release, spill), total penalty cos
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply, spill, and water level. For water supply: Cost[t] = ((target - release[t]) / target) ^ loss_exp[1]). For flood control: Cost[t] = (Spill[t] / quantile(Q, spill_targ)) ^ loss_exp[2]. For amenity: Cost[t] = abs(((storage[t] - (vol_targ * capacity)) / (vol_targ * capacity))) ^ loss_exp[3].
 }
 \examples{
-\donttest{layout(1:3)
+layout(1:3)
 dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
-}
 }
 \seealso{
 \code{\link{sdp_multi}} for Stochastic Dynamic Programming

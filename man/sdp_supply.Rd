@@ -47,10 +47,9 @@ Returns a list that includes: the optimal policy as an array of release decision
 Derives the optimal release policy based on storage state and within-year period only.
 }
 \examples{
-\donttest{layout(1:3)
+layout(1:3)
 sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3))
 sdp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 *mean(resX$Q_Mm3), Markov = TRUE)
-}
 }
 \seealso{
 \code{\link{dp_supply}} for deterministic Dynamic Programming for water supply reservoirs

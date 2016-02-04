@@ -40,9 +40,8 @@ Returns the reservoir simulation output (storage, release, spill), total penalty
 Determines the optimal sequence of releases from the reservoir to minimise a penalty cost function based on water supply defict.
 }
 \examples{
-\donttest{layout(1:3)
+layout(1:3)
 dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
-}
 }
 \seealso{
 \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs

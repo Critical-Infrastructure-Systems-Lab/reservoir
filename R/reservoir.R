@@ -20,7 +20,7 @@
 #' Users must use the recommended units when implementing evaporation losses.
 #' @docType package
 #' @name reservoir
-#' @examples \donttest{# 1. Express the distribution of Rippl storage for a known inflow process...
+#' @examples # 1. Express the distribution of Rippl storage for a known inflow process...
 #' 
 #' # a) Assume the inflow process follows a lognormal distribution
 #' # (meanlog = 0, sdlog = 1):
@@ -68,9 +68,6 @@
 #'  pareto_results$vulnerability[which(row.names(pareto_results)==loss_f)] <- sdp_temp$vulnerability
 #'  }
 #' plot (pareto_results$reliability,pareto_results$vulnerability, type = "b", lty = 3)
-#' 
-#' # Note: donttest/ applied to avoid check time > 5s.
-#' }
 #' 
 #' @references Hurst, H.E. (1951) Long-term storage capacity of reservoirs, Transactions of the American Society of Civil Engineers 116, 770-808.
 #' @references Kaveh, K., H. Hosseinjanzadeh, and K. Hosseini. (2013) A new equation for calculation of reservoir's area-capacity curves, KSCE Journal of Civil Engineering 17(5), 1149-1156.

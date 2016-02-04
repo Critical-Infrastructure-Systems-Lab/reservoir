@@ -37,12 +37,6 @@ Returns a list that includes: the optimal policy as an array of release decision
 \description{
 Derives the optimal release policy based on storage state, inflow class and within-year period.
 }
-\examples{
-\donttest{storage_cap <- 4 * mean(aggregate(ResX_inflow.ts)) # set storage ratio of 4 years
-demand <- 0.8 * mean(ResX_inflow.ts) # set draft ratio of 0.8
-optimal.releases <- sdp(ResX_inflow.ts, capacity = storage_cap, target = demand)
-}
-}
 \references{
 Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (2005) Water resources systems planning and management: An introduction to methods, models and applications. Unesco publishing, Paris, France.
 

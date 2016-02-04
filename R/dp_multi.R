@@ -17,9 +17,8 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
-#' @examples \donttest{layout(1:3)
+#' @examples layout(1:3)
 #' dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
-#' }
 #' @seealso \code{\link{sdp_multi}} for Stochastic Dynamic Programming
 #' @import stats
 #' @importFrom graphics abline lines

@@ -21,9 +21,8 @@
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @seealso \code{\link{dp_multi}} for deterministic Dynamic Programming.
-#' @examples \donttest{layout(1:3)
+#' @examples layout(1:3)
 #' sdp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
-#' }
 #' @import stats
 #' @importFrom graphics abline lines
 #' @export

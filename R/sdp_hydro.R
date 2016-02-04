@@ -19,12 +19,11 @@
 #' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.
 #' @return Returns the optimal release policy, associated Bellman function, simulated storage, release, evaporation, depth, uncontrolled spill, and power generated, and total energy generated.
 #' @seealso \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
-#' @examples \donttest{layout(1:4)
+#' @examples layout(1:4)
 #' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 #' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
 #' sdp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
 #' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
-#' }
 #' @import stats
 #' @export
 sdp_hydro <- function (Q, capacity, capacity_live = capacity,
