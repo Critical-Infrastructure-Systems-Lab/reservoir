@@ -41,7 +41,7 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 }
 \examples{
 layout(1:3)
-dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3))
+dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3), S_disc = 100)
 }
 \seealso{
 \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs

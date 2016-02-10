@@ -50,7 +50,7 @@ Determines the optimal sequence of releases from the reservoir to minimise a pen
 }
 \examples{
 layout(1:3)
-dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3))
+dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3), S_disc = 100)
 }
 \seealso{
 \code{\link{sdp_multi}} for Stochastic Dynamic Programming

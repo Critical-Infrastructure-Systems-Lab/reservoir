@@ -17,7 +17,7 @@
 #' @return Returns the time series of optimal releases and simulated storage, evaporation, depth, uncontrolled spill, and power generated. Total energy generated is also returned.
 #' @examples layout(1:4)
 #' dp_hydro(resX$Q_Mm3, resX$cap_Mm3, surface_area = resX$A_km2,
-#' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3))
+#' installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), S_disc = 100)
 #' @seealso \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs.
 #' @import stats 
 #' @export

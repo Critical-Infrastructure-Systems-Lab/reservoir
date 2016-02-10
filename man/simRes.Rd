@@ -54,7 +54,7 @@ surface_area = area, max_depth = max_d, evap = ev)
 
 # TRAIN SDP POLICY ON HISTORICAL FLOWS
 policy_x <- sdp_supply(Q_pre1980, capacity = res_cap, target = targ,
-surface_area = area, max_depth = max_d, evap = ev, Markov = TRUE, plot = FALSE)
+surface_area = area, max_depth = max_d, evap = ev, Markov = TRUE, plot = FALSE, S_disc = 100)
 
 # SIMULATE WITH SDP-DERIVED POLICY
 simSDP <- simRes(Q_post1980, capacity = res_cap, target = targ,
