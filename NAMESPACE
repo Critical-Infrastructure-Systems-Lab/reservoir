@@ -2,6 +2,7 @@
 
 export(Hurst)
 export(Rippl)
+export(dirtyreps)
 export(dp)
 export(dp_hydro)
 export(dp_multi)
