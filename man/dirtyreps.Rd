@@ -4,32 +4,40 @@
 \alias{dirtyreps}
 \title{Quick and dirty stochastic generation of seasonal streamflow replicates for a single site.}
 \usage{
-dirtyreps(Q, reps = 100, repyrs = length(Q)/frequency(Q), adjust = TRUE)
+dirtyreps(Q, reps, years, k, d, adjust, parameters, method = "kNNboot")
 }
 \arguments{
 \item{Q}{time series object with seasonal resolution (e.g., frequency = 2, 3, 4, 6 or 12 for monthly data).}
 
 \item{reps}{integer. The number of replicates to be generated.  The default is 100.}
 
-\item{repyrs}{integer. The length of each replicate in years. The default is length(Q) / frequency(Q).}
+\item{years}{integer. The length of each replicate in years. The default is equal to the number of complete years given in Q.}
 
-\item{adjust}{logical. If TRUE (the default) the final output time series X will be coerced for 0 <= X <= 1.2*max(Q).}
+\item{k}{integer. The k parameter of the kNN Bootstrap (i.e., number of nearest neighbors). If left blank k = n ^ 0.5., where n is the number of years in the input data.}
+
+\item{d}{integer. The d parameter of the kNN Bootstrap (i.e., number of previous time periods to inform the model). If left blank d = 1.}
+
+\item{adjust}{logical. If TRUE (the default) the final output time series X will be coerced for 0 <= X <= 1.2*max(Q). Applies only if the PARMA method is used.}
+
+\item{parameters}{logical. If TRUE the output will be given as a list including the replicate samples and relevant model parameters (k and d for kNNboot and phi, theta and standard deviation of residuals for PARMA). The default is FALSE.}
+
+\item{method}{character string giving the method used to generate the data. Defaults to "kNNboot" - the k Nearest Neighbour Bootstrap. See references for detail on the two methods available.}
 }
 \value{
 Returns a multi time series object containing synthetic streamflow replicates.
 }
 \description{
-Generates seasonal time series using a numerically-fitted PARMA(1,1) model. The function features automatic procedures for transforming seasonal sub-series to normal and deseasonalizing data.
+Generates seasonal time series using either the kNN Bootstrap (non-parametric) or a numerically-fitted PARMA(1,1) (parametric) model. For the parametric model, the function automatically transforms the seasonal sub-series to normal and deseasonalizes prior to model fitting.
 }
 \examples{
 Q <- resX$Q_Mm3
-replicates <- dirtyreps(Q)
+replicates <- dirtyreps(Q, reps = 3)
 mean(replicates); mean(Q)
 sd(replicates); sd(Q)
-layout(1:4)
-plot(Q, main = "Recorded series", ylim = c(0,1500))
-plot(replicates[,1], main = "Replicate # 1", ylim = c(0,1500))
-plot(replicates[,20], main = "Replicate # 20", ylim = c(0,1500))
-plot(replicates[,99], main = "Replicate # 99", ylim = c(0,1500))
+plot(replicates)
+}
+\references{
+kNN Bootstrap method: Lall, U. and Sharma, A., 1996. A nearest neighbor bootstrap for resampling hydrologic time series. Water Resources Research, 32(3), pp.679-693.
+PARMA method: Salas, J.D. and Fernandez, B., 1993. Models for data generation in hydrology: univariate techniques. In Stochastic Hydrology and its Use in Water Resources Systems Simulation and Optimization (pp. 47-73). Springer Netherlands.
 }
 
