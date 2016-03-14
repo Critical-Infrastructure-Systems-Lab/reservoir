@@ -327,7 +327,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
     plot(Spill, ylab = "Uncontrolled spill")
   }
   
-  total_release_cost <- sum((1 - R_rec/target)[which((1 - R_rec/target) <  1)] ^ loss_exp[1])
+  total_release_cost <- sum((1 - R_rec/target)[which((R_rec/target) <  1)] ^ loss_exp[1])
   total_spill_cost <- sum((Spill / quantile(Q, spill_targ)) ^ loss_exp[2])
   total_volume_cost <- sum(((S - vol_targ * capacity) / (vol_targ * capacity)) ^ loss_exp[3])
   total_weighted_cost <- weights[1] * total_release_cost + weights[2] * total_spill_cost + weights[3] * total_volume_cost 
