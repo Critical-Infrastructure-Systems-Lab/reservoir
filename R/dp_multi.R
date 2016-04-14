@@ -45,14 +45,9 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   if (missing(surface_area)) {
     surface_area <- 0
   }
-  
-  
+
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
   R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
-  
-  if (target %in% R_disc_x == FALSE) {
-    warning("Warning: target not contained in R_disc")
-  }
   
   R_costs <- (target - R_disc_x) / target
   R_costs[which(R_costs < 0)] <- 0
@@ -63,7 +58,6 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   Cost_to_go <- vector("numeric", length = length(S_states))
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
-  
   
   if (missing(max_depth)){
     c <- sqrt(2) / 3 * (surface_area * 10 ^ 6) ^ (3/2) / (capacity * 10 ^ 6)

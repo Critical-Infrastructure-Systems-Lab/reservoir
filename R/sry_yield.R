@@ -32,10 +32,6 @@ yield <- function(Q, capacity, reliability, demand_profile,
     if (double_cycle) {
         Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
     }
-    
-    if (reliability == 1){
-      reliability <- 0.9999 # reliability of 1 allows convergence to stop at over-large storage
-    }
   
     S <- vector("numeric", length = length(Q) + 1); S[1] <- capacity * S_initial
     R <- vector("numeric", length = length(Q))
@@ -64,13 +60,13 @@ yield <- function(Q, capacity, reliability, demand_profile,
             }
         }
         reliability_0 <- 1 - (sum( (R / R_target) < 1) / length(Q))
-        if (reliability_0 > reliability) {
+        if (reliability_0 >= reliability) {
             min_yield <- mid_yield
         }
         if (reliability_0 < reliability) {
             max_yield <- mid_yield
         }
-        if (round(reliability_0, 3) == reliability) {
+        if (max_yield - min_yield < 0.01) {
             break
         }
         if (i >= max_iterations) {
@@ -84,7 +80,7 @@ yield <- function(Q, capacity, reliability, demand_profile,
     
     
     if (plot) {
-        plot(S, ylab = "Storage",main = (paste0("Yield = ",round(mid_yield, 2), " at ", reliability * 100, " % reliability")))
+        plot(S, ylab = "Storage", ylim = c(0,max(S)), main = (paste0("Yield = ",round(mid_yield, 2), " at ", reliability * 100, " % reliability")))
         plot(R, ylim = c(0, max(R)), ylab = "Water supplied")
         plot(Spill, ylab = "Spill")
     }

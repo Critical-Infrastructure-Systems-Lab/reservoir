@@ -32,6 +32,15 @@ The simplest is based on the half-pyramid method [Liebe et al, 2005], requiring 
 A more nuanced relationship [Kaveh et al., 2013] is implemeted if the user also provides the maximum depth of the reservoir at full capacity via the \code{max_depth} parameter.
 Users must use the recommended units when implementing evaporation losses.
 }
+
+\section{Stochastic generation of synthetic streamflow replicates}{
+
+The \code{\link{dirtyreps}} function provides quick and dirty generation of stochastic streamflow replicates (seasonal input data, such as monthly or quarterly, only).
+Two methods are available: the non-parametric kNN bootstrap [Lall and Sharma, 1996] and the parametric periodic Autoregressive Moving Average (PARMA).
+The PARMA is fitted for p = 1 and q = 1, or PARMA(1,1). Fitting is done numerically by the least-squares method [Salas and Fernandez, 1993].
+When using the PARMA model, users do not need to transform or deseasonalize the input data as this is done automatically within the algorithm.
+The kNN bootstrap is non-parametric, so no intial data preparation is required here either.
+}
 \examples{
 # 1. Express the distribution of Rippl storage for a known inflow process...
 layout(1:4)
@@ -100,5 +109,9 @@ Pfaff, B. (2008) Analysis of integrated and cointegrated time series with R, Spr
 Rippl, W. (1883) The capacity of storage reservoirs for water supply, In Proceedings of the Institute of Civil Engineers, 71, 270-278.
 
 Thomas H.A., Burden R.P. (1963) Operations research in water quality management. Harvard Water Resources Group, Cambridge
+
+kNN Bootstrap method: Lall, U. and Sharma, A. (1996). A nearest neighbor bootstrap for resampling hydrologic time series. Water Resources Research, 32(3), pp.679-693.
+
+PARMA method: Salas, J.D. and Fernandez, B. (1993). Models for data generation in hydrology: univariate techniques. In Stochastic Hydrology and its Use in Water Resources Systems Simulation and Optimization (pp. 47-73). Springer Netherlands.
 }
 

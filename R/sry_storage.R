@@ -28,13 +28,9 @@ storage <- function(Q, yield, reliability, demand_profile,
     if (double_cycle) {
         Q <- ts(c(Q, Q), start = start(Q), frequency = frequency(Q))
     }
-    if (reliability == 1){
-      reliability <- 0.9999 # reliability of 1 allows convergence to stop at over-large storage
-    }
-  
+
     S <- vector("numeric", length = length(Q) + 1)
     R <- vector("numeric", length = length(Q))
-    
     min_storage <- 0
     max_storage <- 100 * mean(Q) * frequency(Q)  #Provides upper bound of 100 years' storage
     i <- 0
@@ -62,14 +58,14 @@ storage <- function(Q, yield, reliability, demand_profile,
         }
         
         reliability_0 <- 1 - (sum((R / R_target) < 1) / length(Q))
-        if (reliability_0 > reliability) {
+        if (reliability_0 >= reliability) {
             max_storage <- mid_storage
         }
         if (reliability_0 < reliability) {
             min_storage <- mid_storage
         }
         
-        if (round(reliability_0, 3) == reliability) {
+        if (max_storage - min_storage < 0.01) {
             break
         }
         if (i >= max_iterations) {
