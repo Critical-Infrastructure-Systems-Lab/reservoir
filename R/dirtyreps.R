@@ -3,11 +3,11 @@
 #' @param Q             time series object with seasonal resolution (e.g., frequency = 2, 3, 4, 6 or 12 for monthly data). 
 #' @param reps          integer. The number of replicates to be generated.  The default is 100.
 #' @param years         integer. The length of each replicate in years. The default is equal to the number of complete years given in Q.
-#' @param k             integer. The k parameter of the kNN Bootstrap (i.e., number of nearest neighbors). If left blank k = n ^ 0.5., where n is the number of years in the input data.
+#' @param k             integer. The k parameter of the kNN Bootstrap (i.e., number of nearest neighbors from which to sample). If left blank k = n ^ 0.5., where n is the number of years in the input data.
 #' @param d             integer. The d parameter of the kNN Bootstrap (i.e., number of previous time periods to inform the model). If left blank d = 1.
 #' @param adjust        logical. If TRUE (the default) the final output time series X will be coerced for 0 <= X <= 1.2*max(Q). Applies only if the PARMA method is used.
 #' @param parameters    logical. If TRUE the output will be given as a list including the replicate samples and relevant model parameters (k and d for kNNboot and phi, theta and standard deviation of residuals for PARMA). The default is FALSE.
-#' @param method        character string giving the method used to generate the data. Defaults to "kNNboot" - the k Nearest Neighbour Bootstrap. See references for detail on the two methods available.
+#' @param method        character object giving the method used to generate the data. Defaults to "kNNboot" - the k Nearest Neighbour Bootstrap. See references for detail on the two methods available.
 #' @return Returns a multi time series object containing synthetic streamflow replicates.
 #' @examples
 #' Q <- resX$Q_Mm3
