@@ -6,7 +6,7 @@
 \usage{
 dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
   target, spill_targ = 0.95, vol_targ = 0.75, weights = c(0.7, 0.2, 0.1),
-  loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1,
+  loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1, c2g,
   plot = TRUE, rep_rrv = FALSE)
 }
 \arguments{
@@ -37,6 +37,8 @@ dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
 \item{R_disc}{integer. Release discretization. Default = 10 divisions.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
+
+\item{c2g}{vector. Optional end-state cost-to-go.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 

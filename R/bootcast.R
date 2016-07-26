@@ -2,7 +2,7 @@
 #' @description For seasonal streamflow "hindcasts" based solely on persistence.
 #' @param Q              time series object - seasonal streamflow rate or streamflow totals.
 #' @param H              integer giving the number of seasons in the forecast horizon (e.g., H = 3 means a three month forecast if the frequency of Q is 12).
-#' @param start_yr       start year (if omitted, forecast will be for one year)
+#' @param start_yr       start year for the forecast to be generated.
 #' @param end_yr         end_year (if omitted, forecast will be for last year of input)
 #' @param k              integer. The k parameter of the kNN Bootstrap (i.e., number of nearest neighbors from which to sample). If left blank k = n ^ 0.5., where n is the number of years in the input data.
 #' @param d              integer. The d parameter of the kNN Bootstrap (i.e., number of previous time periods to inform the model). If left blank d = 1. 

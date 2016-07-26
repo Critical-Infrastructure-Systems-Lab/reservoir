@@ -6,7 +6,7 @@
 \usage{
 dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
   installed_cap, head, qmax, max_depth, efficiency = 0.9, S_disc = 1000,
-  R_disc = 10, S_initial = 1, plot = TRUE)
+  R_disc = 10, S_initial = 1, r2g, plot = TRUE)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.}
@@ -34,6 +34,8 @@ dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
 \item{R_disc}{integer. Release discretization. Default = 10 divisions.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
+
+\item{r2g}{vector. Optional end-state cost-to-go.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 }

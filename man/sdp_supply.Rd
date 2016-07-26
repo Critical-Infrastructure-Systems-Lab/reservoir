@@ -44,7 +44,7 @@ sdp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
 Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy.
 }
 \description{
-Derives the optimal release policy based on storage state and within-year period only.
+Derives the optimal release policy based on either season and storage level, or season, storage level, and current-period inflow.
 }
 \examples{
 layout(1:3)

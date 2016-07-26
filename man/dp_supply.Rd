@@ -5,7 +5,7 @@
 \title{Dynamic Programming for water supply reservoirs}
 \usage{
 dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
-  R_disc = 10, loss_exp = 2, S_initial = 1, plot = TRUE,
+  R_disc = 10, loss_exp = 2, S_initial = 1, c2g, plot = TRUE,
   rep_rrv = FALSE)
 }
 \arguments{
@@ -28,6 +28,8 @@ dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
 \item{loss_exp}{numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.}
 
 \item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
+
+\item{c2g}{vector. Optional end-state cost-to-go.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
 

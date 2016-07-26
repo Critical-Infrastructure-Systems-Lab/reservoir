@@ -14,6 +14,7 @@
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      vector of length 3 indicating the exponents on release, spill and water level deviations from target. Default exponents are c(2,2,2).
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
+#' @param c2g           vector. Optional end-state cost-to-go.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
@@ -26,8 +27,8 @@
 dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
                      R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
                      weights = c(0.7, 0.2, 0.1), loss_exp = c(2, 2, 2),
-                     S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE,
-                     rep_rrv = FALSE) {
+                     S_disc = 1000, R_disc = 10, S_initial = 1, c2g,
+                     plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
@@ -47,15 +48,17 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   }
 
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
+  if(missing(c2g)) {
+    c2g <- vector("numeric", length = length(S_states))
+  }
   R_disc_x <- seq(from = 0, to = R_max, by = R_max / R_disc)
-  
   R_costs <- (target - R_disc_x) / target
   R_costs[which(R_costs < 0)] <- 0
   R_costs <- R_costs ^ loss_exp[1]
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat <- apply(State_mat, 2, "+", S_states)
   State_mat <- t(apply(State_mat, 1, "-", R_disc_x))
-  Cost_to_go <- vector("numeric", length = length(S_states))
+  Cost_to_go <- c2g
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   

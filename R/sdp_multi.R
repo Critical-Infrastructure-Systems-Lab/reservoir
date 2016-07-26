@@ -211,7 +211,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
       message(sum(R_policy == R_policy_test) /
                 (frq * length(S_states)))   
       if (sum(R_policy == R_policy_test) /
-          (frq * length(S_states)) > tol){
+          (frq * length(S_states)) >= tol){
         break
       }
       
@@ -261,7 +261,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
         Bellman[,,t] <- Cost_to_go
       }
       message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
-      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) > tol){
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) >= tol){
         break
       }
       R_policy_test <- R_policy

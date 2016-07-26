@@ -216,7 +216,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         R_policy[,t] <- apply(Max_rev_expected, 1, which.max)
       }
       message(sum(R_policy == R_policy_test) / (frq * length(S_states)))   
-      if (sum(R_policy == R_policy_test) / (frq * length(S_states)) > tol){
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states)) >= tol){
         break
       }
       R_policy_test <- R_policy
@@ -255,7 +255,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         Bellman[,,t] <- Rev_to_go
       }
       message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
-      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) > tol){
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) >= tol){
         break
       }
       R_policy_test <- R_policy

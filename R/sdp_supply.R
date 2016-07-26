@@ -1,5 +1,5 @@
 #' @title Stochastic Dynamic Programming for water supply reservoirs
-#' @description Derives the optimal release policy based on storage state and within-year period only.
+#' @description Derives the optimal release policy based on either season and storage level, or season, storage level, and current-period inflow.
 #' @param Q             vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).
 #' @param capacity      numerical. The reservoir storage capacity. Recommended units: Mm^3 (Million cubic meters).
 #' @param target        numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).
@@ -193,7 +193,7 @@ sdp_supply <- function (Q, capacity, target, surface_area, max_depth, evap,
         R_policy[,t] <- apply(Min_cost_expected, 1, which.min)
       }
       message(sum(R_policy == R_policy_test) / (frq * length(S_states)))   
-      if (sum(R_policy == R_policy_test) / (frq * length(S_states)) > tol){
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states)) >= tol){
         break
       }
       R_policy_test <- R_policy
@@ -230,7 +230,7 @@ sdp_supply <- function (Q, capacity, target, surface_area, max_depth, evap,
         Bellman[,,t] <- Cost_to_go
       }
       message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
-      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) > tol){
+      if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) >= tol){
         break
       }
       R_policy_test <- R_policy

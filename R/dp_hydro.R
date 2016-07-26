@@ -13,6 +13,7 @@
 #' @param S_disc        integer. Storage discretization--the number of equally-sized storage states. Default = 1000.
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
+#' @param r2g           vector. Optional end-state cost-to-go.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns the time series of optimal releases and simulated storage, evaporation, depth, uncontrolled spill, and power generated. Total energy generated is also returned.
 #' @examples layout(1:4)
@@ -23,7 +24,7 @@
 #' @export
 dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
                      installed_cap, head, qmax, max_depth, efficiency = 0.9,
-                     S_disc = 1000, R_disc = 10, S_initial = 1, plot = TRUE) {
+                     S_disc = 1000, R_disc = 10, S_initial = 1, r2g, plot = TRUE) {
   
   if (is.ts(Q) == FALSE) {
     stop("Q must be time series object")
@@ -53,13 +54,18 @@ dp_hydro <- function(Q, capacity, capacity_live = capacity, surface_area, evap,
   if (length(evap) != length(Q)){
     stop("Evaporation must be either a vector (or time series) length Q, or a single numeric constant")
   }
-  
+
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
+  
+  if(missing(r2g)) {
+    r2g <- vector("numeric", length = length(S_states))
+  }
+  
   R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat <- apply(State_mat, 2, "+", S_states)
   State_mat <- t(apply(State_mat, 1, "-", R_disc_x))
-  Rev_to_go <- vector("numeric", length = length(S_states))
+  Rev_to_go <- r2g
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   

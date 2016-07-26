@@ -11,7 +11,7 @@ bootcast(Q, H, start_yr, end_yr, k, d, sampling_mode, plot)
 
 \item{H}{integer giving the number of seasons in the forecast horizon (e.g., H = 3 means a three month forecast if the frequency of Q is 12).}
 
-\item{start_yr}{start year (if omitted, forecast will be for one year)}
+\item{start_yr}{start year for the forecast to be generated.}
 
 \item{end_yr}{end_year (if omitted, forecast will be for last year of input)}
 

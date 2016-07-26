@@ -10,6 +10,7 @@
 #' @param R_disc        integer. Release discretization. Default = 10 divisions.
 #' @param loss_exp      numeric. The exponent of the penalty cost function--i.e., Cost[t] <- ((target - release[t]) / target) ^ **loss_exp**). Default value is 2.
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
+#' @param c2g           vector. Optional end-state cost-to-go.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns the reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
@@ -20,7 +21,7 @@
 #' @export
 dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
                       S_disc = 1000, R_disc = 10, loss_exp = 2, S_initial = 1,
-                      plot = TRUE, rep_rrv = FALSE) {
+                      c2g, plot = TRUE, rep_rrv = FALSE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
@@ -41,12 +42,17 @@ dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
   }
   
   S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)
+  
+  if(missing(c2g)) {
+    c2g <- vector("numeric", length = length(S_states))
+  }
+  
   R_disc_x <- seq(from = 0, to = target, by = target / R_disc)
   R_costs <- ( ( (target - R_disc_x) / target) ^ loss_exp)
   State_mat <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat <- apply(State_mat, 2, "+", S_states)
   State_mat <- t(apply(State_mat, 1, "-", R_disc_x))
-  Cost_to_go <- vector("numeric", length = length(S_states))
+  Cost_to_go <- c2g
   Bellman <- matrix(0, nrow = length(S_states), ncol = length(Q))
   R_policy <- matrix(0, ncol = length(Q), nrow = length(S_states))
   
