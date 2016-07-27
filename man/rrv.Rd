@@ -4,29 +4,12 @@
 \alias{rrv}
 \title{Reliability, resilience, and vulnerability analysis for water supply reservoirs}
 \usage{
-rrv(Q, target, capacity, double_cycle = FALSE, surface_area, max_depth, evap,
-  plot = TRUE, S_initial = 1, policy)
+rrv(X, target)
 }
 \arguments{
-\item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
+\item{X}{time series object representing the release time series of a reservoir.}
 
-\item{target}{numerical. The target release constant. Recommended units: Mm^3 (Million cubic meters).}
-
-\item{capacity}{numerical. The reservoir capacity. Should be same volumetric unit as Q and R.}
-
-\item{double_cycle}{logical. If TRUE the input series will be replicated and placed end-to-end to double the simulation. (Recommended if the critical period occurs at the end of the recorded inflow time series)}
-
-\item{surface_area}{numerical. The reservoir water surface area at maximum capacity. Recommended units: km^2 (square kilometers).}
-
-\item{max_depth}{numerical. The maximum water depth of the reservoir at maximum capacity. If omitted, the depth-storage-area relationship will be estimated from surface area and capacity only. Recommended units: meters.}
-
-\item{evap}{vector or time series object of length Q, or a numerical constant.  Evaporation from losses from reservoir surface. Varies with level if depth and surface_area parameters are specified. Recommended units: meters, or kg/m2 * 10 ^ -3.}
-
-\item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
-
-\item{S_initial}{numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1.}
-
-\item{policy}{list. The output of the SDP function. If omitted, Standard Operating Policy is assumed.}
+\item{target}{numerical constant (or a vector of length = length(X)). If omitted then the trigger constant will be < max(X).}
 }
 \value{
 Returns reliability, resilience and vulnerability metrics based on supply deficits.
@@ -36,9 +19,5 @@ Computes time-based, annual, and volumetric reliability, as well as resilience a
 }
 \examples{
 # Compare reliability, resilience and vulnerability for two operating policies (SOP and SDP).
-rrv(resX$Q_Mm3, capacity = 20*resX$cap_Mm3, target = 0.95 * mean(resX$Q_Mm3))
-pol_Markov <- sdp_supply(resX$Q_Mm3, capacity = 20 * resX$cap_Mm3,
-target = 0.95 * mean(resX$Q_Mm3), Markov = TRUE)
-rrv(resX$Q_Mm3, capacity = 20*resX$cap_Mm3, target = 0.95 * mean(resX$Q_Mm3), policy = pol_Markov)
 }
 

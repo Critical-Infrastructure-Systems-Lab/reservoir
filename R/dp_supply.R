@@ -157,49 +157,13 @@ dp_supply <- function(Q, capacity, target, surface_area, max_depth, evap,
   
   if (rep_rrv == TRUE){
     
-    deficit <- ts(round(1 - (R / target),5), start = start(Q), frequency = frequency(Q))
-    rel_ann <- sum(aggregate(deficit, FUN = mean) == 0) /
-      length(aggregate(deficit, FUN = mean))
-    rel_time <- sum(deficit == 0) / length(deficit)
-    rel_vol <- sum(R) / (target * length(deficit))
-    fail.periods <- which(deficit > 0)
-    if (length(fail.periods) == 0) {
-      resilience <- NA
-      vulnerability <- NA
-    } else {
-      if (length(fail.periods) == 1) {
-        resilience <- 1
-        vulnerability <- max(deficit)
-      } else {
-        resilience <- (sum(diff(which(deficit > 0)) > 1) + 1) / (length(which(deficit > 0)))
-        fail.refs <- vector("numeric", length = length(fail.periods))
-        fail.refs[1] <- 1
-        for (j in 2:length(fail.periods)) {
-          if (fail.periods[j] > (fail.periods[j - 1] + 1)) {
-            fail.refs[j] <- fail.refs[j - 1] + 1
-          } else {
-            fail.refs[j] <- fail.refs[j - 1]
-          }
-        }
-        n.events <- max(fail.refs)
-        event.starts <- by(fail.periods, fail.refs, FUN = min)
-        event.ends <- by(fail.periods, fail.refs, FUN = max)
-        max.deficits <- vector("numeric", length = n.events)
-        for (k in 1:n.events) {
-          max.deficits[k] <- max(deficit[event.starts[k]:event.ends[k]])
-        }
-        
-        vulnerability <- mean(max.deficits)
-      }
-    }
-    
-    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, total_penalty)
+    rrv_ <- rrv(R, target)
+    results <- list(S, R, E, y, Spill, unname(rrv_)[1], unname(rrv_)[2],
+                    unname(rrv_)[3], unname(rrv_)[4], unname(rrv_)[5], total_penalty)
     names(results) <- c("storage", "releases", "evap_loss", "water_level",
                         "spill", "annual_reliability",
                         "time_based_reliability", "volumetric_reliability",
                         "resilience", "vulnerability", "total_penalty_cost")
-    
-    
     
   } else {
     results <- list(S, R, E, y, Spill, total_penalty)

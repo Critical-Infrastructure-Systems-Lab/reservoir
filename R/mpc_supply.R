@@ -15,11 +15,13 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns a list of reservoir variables as time series for the forecast period. Also returns penalty cost during operating period and cost savings relative to operations without forecasts.
-#' @examples #
-#' Q <- resX$Q_Mm3
+#' @examples Q <- resX$Q_Mm3
 #' forecastQ <- bootcast(Q, start_yr = 1980, H = 3, plot = FALSE)
-#' simQ <- simcast_supply(Q, resX$cap_Mm3, target = 0.3*mean(Q), forecast = forecastQ, start_yr=1980)
+#' layout(1:3)
+#' simQ <- simcast_supply(Q, resX$cap_Mm3, target = 0.3*mean(Q),
+#' forecast = forecastQ, start_yr=1980, S_disc = 200)
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 simcast_supply <- function(Q, forecast, start_yr, capacity, target, surface_area,
                                max_depth, evap, S_disc = 1000, R_disc = 10,

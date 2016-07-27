@@ -19,10 +19,13 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns a list of reservoir variables as time series for the forecast period. Also returns penalty cost during operating period and cost savings relative to operations without forecasts.
-#' @examples #
-#' Q <- resX$Q_Mm3
+#' @examples Q <- resX$Q_Mm3
 #' forecastQ <- bootcast(Q, start_yr = 1980, H = 3, plot = FALSE)
+#' layout(1:3)
+#' simQ <- simcast_multi(Q, resX$cap_Mm3, target = 0.3*mean(Q),
+#' forecast = forecastQ, start_yr=1980, S_disc = 200)
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 simcast_multi <- function(Q, forecast, start_yr, capacity, target, surface_area,
                           max_depth, evap, R_max = 2 * target, spill_targ = 0.95,
@@ -123,7 +126,7 @@ simcast_multi <- function(Q, forecast, start_yr, capacity, target, surface_area,
                             surface_area = surface_area, max_depth = max_depth, evap = evap_tr,
                             weights = weights, S_disc = S_disc, Q_disc = Q_disc,
                             loss_exp = loss_exp, S_initial = 1, plot = FALSE, tol = 0.999,
-                            Markov = FALSE, rep_rrv = FALSE)
+                            Markov = FALSE)
 
 
   # SIMULATE FORECAST-INFORMED MODEL
@@ -185,7 +188,7 @@ simcast_multi <- function(Q, forecast, start_yr, capacity, target, surface_area,
   
   
   ## SIMULATE THE RESERVOIR WITHOUT FORECAST-INFORMED OPERATION
-  xx <- simRes(Qfc, target = target, capacity = capacity,
+  xx <- simRes(Qfc, target = R_max, capacity = capacity,
                surface_area = surface_area, max_depth = max_depth,
                evap = evap_fc, plot = FALSE, S_initial = S_initial,
                policy = x)
@@ -198,11 +201,11 @@ simcast_multi <- function(Q, forecast, start_yr, capacity, target, surface_area,
   cost_saving <- 100 * (1 - (total_weighted_cost / total_weighted_cost_sdp))
   
   if(plot) {
-    plot(R, ylab = "Controlled release", ylim = c(0, target))
+    plot(R, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
     lines(xx$releases, col = "grey", lty = 2)
-    plot(S, ylab = "Storage", ylim = c(0, capacity))
+    plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
     lines(xx$storage, col = "grey", lty = 2)
-    plot(Sp, ylab = "Uncontrolled spill")
+    plot(Sp, ylab = "Uncontrolled spill"); abline(h = quantile(Q, spill_targ), lty = 2)
     lines(xx$spill, col = "grey", lty = 2)
   }
   

@@ -44,9 +44,10 @@ Returns a list of reservoir variables as time series for the forecast period. Al
 For simulating a water supply reservoir operated with rolling horizon, adaptive control (Model Predictive Control).
 }
 \examples{
-#
 Q <- resX$Q_Mm3
 forecastQ <- bootcast(Q, start_yr = 1980, H = 3, plot = FALSE)
-simQ <- simcast_supply(Q, resX$cap_Mm3, target = 0.3*mean(Q), forecast = forecastQ, start_yr=1980)
+layout(1:3)
+simQ <- simcast_supply(Q, resX$cap_Mm3, target = 0.3*mean(Q),
+forecast = forecastQ, start_yr=1980, S_disc = 200)
 }
 

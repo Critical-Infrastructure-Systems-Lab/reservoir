@@ -16,7 +16,6 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param c2g           vector. Optional end-state cost-to-go.
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
-#' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.
 #' @examples layout(1:3)
 #' dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3), S_disc = 100)
@@ -28,7 +27,7 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
                      R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
                      weights = c(0.7, 0.2, 0.1), loss_exp = c(2, 2, 2),
                      S_disc = 1000, R_disc = 10, S_initial = 1, c2g,
-                     plot = TRUE, rep_rrv = FALSE) {
+                     plot = TRUE) {
   
   if (is.ts(Q) == FALSE && is.vector(Q) == FALSE) {
     stop("Q must be time series or vector object")
@@ -167,66 +166,13 @@ dp_multi <- function(Q, capacity, target, surface_area, max_depth, evap,
   costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
   names(costs) <- c("total_release_cost", "total_spill_cost", "total_volume_cost", "total_weighted_cost")
   
-  
-  
-  # COMPUTE RRV METRICS FROM SIMULATION RESULTS---------------------------------------
-  
-  if (rep_rrv == TRUE){
-    
-    deficit <- ts(round(1 - (R / target),5), start = start(Q), frequency = frequency(Q))
-    rel_ann <- sum(aggregate(deficit, FUN = mean) == 0) /
-      length(aggregate(deficit, FUN = mean))
-    rel_time <- sum(deficit == 0) / length(deficit)
-    rel_vol <- sum(R) / (target * length(deficit))
-    fail.periods <- which(deficit > 0)
-    if (length(fail.periods) == 0) {
-      resilience <- NA
-      vulnerability <- NA
-    } else {
-      if (length(fail.periods) == 1) {
-        resilience <- 1
-        vulnerability <- max(deficit)
-      } else {
-        resilience <- (sum(diff(which(deficit > 0)) > 1) + 1) / (length(which(deficit > 0)))
-        fail.refs <- vector("numeric", length = length(fail.periods))
-        fail.refs[1] <- 1
-        for (j in 2:length(fail.periods)) {
-          if (fail.periods[j] > (fail.periods[j - 1] + 1)) {
-            fail.refs[j] <- fail.refs[j - 1] + 1
-          } else {
-            fail.refs[j] <- fail.refs[j - 1]
-          }
-        }
-        n.events <- max(fail.refs)
-        event.starts <- by(fail.periods, fail.refs, FUN = min)
-        event.ends <- by(fail.periods, fail.refs, FUN = max)
-        max.deficits <- vector("numeric", length = n.events)
-        for (k in 1:n.events) {
-          max.deficits[k] <- max(deficit[event.starts[k]:event.ends[k]])
-        }
-        
-        vulnerability <- mean(max.deficits)
-      }
-    }
-    
-    results <- list(S, R, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, costs)
-    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "annual_reliability",
-                        "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability")
-    
-  } else {
-    results <- list(S, R, E, y, Spill, costs)
-    names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "total_costs")
-  }
-  
-  #===============================================================================
-  
-  
+  results <- list(S, R, E, y, Spill, costs)
+  names(results) <- c("storage", "releases", "evap_loss", "water_level", "spill", "total_costs")
+
   if (plot) {
-    
     plot(R, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
     plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
-    plot(Spill, ylab = "Uncontrolled spill")
+    plot(Spill, ylab = "Uncontrolled spill"); abline(h = quantile(Q, spill_targ), lty = 2)
   }
   return(results)
 } 

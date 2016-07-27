@@ -18,10 +18,14 @@
 #' @param S_initial     numeric. The initial storage as a ratio of capacity (0 <= S_initial <= 1). The default value is 1. 
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @return Returns a list of reservoir variables as time series for the forecast period. Also returns penalty cost during operating period and cost savings relative to operations without forecasts.
-#' @examples #
-#' Q <- resX$Q_Mm3
-#' forecastQ <- bootcast(Q, start_yr = 1980, H = 3, plot = FALSE)
+#' @examples Q <- resX$Q_Mm3
+#' forecastQ <- bootcast(Q, start_yr = 1980, H = 2, plot = FALSE)
+#' layout(1:4)
+#' simQ <- simcast_hydro(Q, forecast = forecastQ, start_yr=1980,
+#' resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW,
+#' head = resX$y_m, S_disc = 200)
 #' @import stats
+#' @importFrom graphics abline lines
 #' @export
 simcast_hydro <- function(Q, forecast, start_yr, capacity, capacity_live = capacity,
                           surface_area, max_depth, evap, installed_cap, head, qmax,
@@ -142,10 +146,12 @@ simcast_hydro <- function(Q, forecast, start_yr, capacity, capacity_live = capac
   # GET COST-TO-GO FUNCTION FOR THE RESERVOIR
   message("Deriving the reservoir's cost-to-go function...")
   x <- reservoir::sdp_hydro(Q = Qtr, capacity = capacity, capacity_live = capacity_live,
-                            surface_area = surface_area, max_depth = max_depth, evap = evap_tr,
+                            surface_area = surface_area, evap = evap_tr, max_depth = max_depth,
                             installed_cap = installed_cap, head = head, qmax = qmax,
                             efficiency = efficiency, S_disc = S_disc, Q_disc = Q_disc,
                             S_initial = 1, plot = FALSE, tol = 0.999, Markov = FALSE)
+
+  
   
   # SIMULATE FORECAST-INFORMED MODEL
   message("Beginning simuation...")
@@ -196,41 +202,74 @@ simcast_hydro <- function(Q, forecast, start_yr, capacity, capacity_live = capac
                               R[t_index] / (365.25 / frq * 24 * 60 * 60), 0)
     }
   }
-  S <- ts(S[1:(length(S) - 1)],start = start(Qfc),frequency = frq)
-  R <- ts(R, start = start(Qfc), frequency = frq)
-  E <- ts(E, start = start(Q), frequency = frq)
-  y <- ts(y, start = start(Q), frequency = frq)
 
-
-  
   S <- ts(S[1:(length(S)-1)], start = start(Qfc), frequency = frq)
   R <- ts(R, start = start(Qfc), frequency = frq)
   E <- ts(E, start = start(Qfc), frequency = frq)
-  y <- ts(y, start = start(Q), frequency = frequency(Q))
+  y <- ts(y, start = start(Qfc), frequency = frq)
   Sp <- ts(Sp, start = start(Qfc), frequency = frq)
-  Power <- ts(Power, start = start(Q), frequency = frq)
+  Power <- ts(Power, start = start(Qfc), frequency = frq)
   Energy_MWh <- sum(Power * (365.25 / frq) * 24)
 
   
   ## SIMULATE THE RESERVOIR WITHOUT FORECAST-INFORMED OPERATION
-  #xx <- simRes(Qfc, target = target, capacity = capacity,
-  #             surface_area = surface_area, max_depth = max_depth,
-  #             evap = evap_fc, plot = FALSE, S_initial = S_initial,
-  #             policy = x)
   
-  #total_penalty_sdp <- sum( ( (target - xx$releases) / target) ^ loss_exp)
-  #
-  #cost_saving <- 100 * (1 - (total_penalty / total_penalty_sdp))
+  Sx <- vector("numeric",length(Qfc) + 1); Sx[1] <- S_initial * capacity    
+  Rx <- vector("numeric",length(Qfc))
+  Ex <- vector("numeric", length(Qfc))
+  yx <- vector("numeric", length(Qfc))
+  Spx <- vector("numeric", length(Qfc))
+  Powerx <- vector("numeric", length(Qfc))
+  Q_month_matx <- matrix(Qfc, byrow = TRUE, ncol = frq)
+  S_states <- seq(from = 0, to = capacity, by = capacity / S_disc)                   
+  R_disc_x <- seq(from = 0, to = qmax, by = qmax / R_disc)
+  R_policy <- x$release_policy * R_disc + 1
   
-  if(plot) {
-    plot(R, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
-    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap))
-    plot(S, ylab = "Storage [Mm3]", ylim = c(0, capacity))
-    plot(Sp, ylab = "Uncontrolled spill [Mm3]")
+  for (yr in 1:nrow(Q_month_matx)) {
+    for (month in 1:frq) {
+      t_index <- (frq * (yr - 1)) + month   
+      S_state <- which.min(abs(S_states - Sx[t_index]))
+      Qx <- Q_month_matx[yr,month]
+      
+      rel <- min(R_disc_x[R_policy[S_state,month]], Sx[t_index] + Qx - (capacity - capacity_live))
+      Rx[t_index] <- rel
+      Ex[t_index] <- GetEvap(s = Sx[t_index], q = Qx, r = rel, ev = evap_fc[t_index])
+      yx[t_index] <- GetLevel(c, Sx[t_index] * 10 ^ 6)
+      
+      
+      
+      if ( (Sx[t_index] - rel + Qx - Ex[t_index]) > capacity) {
+        Sx[t_index + 1] <- capacity
+        Spx[t_index] <- Sx[t_index] - rel + Qx - capacity - Ex[t_index]
+      }else{
+        if ( (Sx[t_index] - rel + Qx - Ex[t_index]) < 0) {
+          Sx[t_index + 1] <- 0
+          Rx[t_index] <- max(0, Sx[t_index] + Qx - Ex[t_index])
+        }else{
+          Sx[t_index + 1] <- Sx[t_index] - rel + Qx - Ex[t_index]
+        }
+      }
+      Powerx[t_index] <- max(efficiency * 1000 * 9.81 * (GetLevel(c,mean(Sx[t_index:(t_index + 1)]) * (10 ^ 6)) + yconst) * 
+                              Rx[t_index] / (365.25 / frq * 24 * 60 * 60), 0)
+    }
   }
   
-  results <- list(S, R, E, y, Sp, Power, Energy_MWh)
+  Energyx <- sum(Powerx * (365.25 / frq) * 24)
+  Energy_gain_percent <- (Energy_MWh / Energyx - 1) * 100
+
+  if(plot) {
+    plot(R, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
+    lines(ts(Rx, start=start(R), frequency=frq), col = "grey", lty = 2)
+    plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap))
+    lines(ts(Powerx, start=start(R), frequency=frq), col = "grey", lty = 2)
+    plot(S, ylab = "Storage [Mm3]", ylim = c(0, capacity))
+    lines(ts(Sx, start=start(R), frequency=frq), col = "grey", lty = 2)
+    plot(Sp, ylab = "Uncontrolled spill [Mm3]")
+    lines(ts(Spx, start=start(R), frequency=frq), col = "grey", lty = 2)
+  }
+  
+  results <- list(S, R, E, y, Sp, Power, Energy_MWh, Energy_gain_percent)
   names(results) <- c("storage", "releases", "evap_loss", "water_level",
-                      "spill", "power", "Energy_MWh")
+                      "spill", "power", "Energy_MWh", "Energy_gain_percent")
   return(results)
 }

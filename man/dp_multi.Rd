@@ -7,7 +7,7 @@
 dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
   target, spill_targ = 0.95, vol_targ = 0.75, weights = c(0.7, 0.2, 0.1),
   loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1, c2g,
-  plot = TRUE, rep_rrv = FALSE)
+  plot = TRUE)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
@@ -41,8 +41,6 @@ dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
 \item{c2g}{vector. Optional end-state cost-to-go.}
 
 \item{plot}{logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.}
-
-\item{rep_rrv}{logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.}
 }
 \value{
 Returns reservoir simulation output (storage, release, spill), total penalty cost associated with the objective function, and, if requested, the reliability, resilience and vulnerability of the system.

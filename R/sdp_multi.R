@@ -18,7 +18,6 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
 #' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.
-#' @param rep_rrv       logical. If TRUE then reliability, resilience and vulnerability metrics are computed and returned.
 #' @return Returns a list that includes: the optimal policy as an array of release decisions dependent on storage state, month/season, and current-period inflow class; the Bellman cost function based on storage state, month/season, and inflow class; the optimized release and storage time series through the training inflow data; the flow discretization (which is required if the output is to be implemented in the rrv function); and, if requested, the reliability, resilience, and vulnerability of the system under the optimized policy. 
 #' @seealso \code{\link{dp_multi}} for deterministic Dynamic Programming.
 #' @examples layout(1:3)
@@ -30,7 +29,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
                        R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75, Markov = FALSE,
                        weights = c(0.7, 0.2, 0.1), S_disc = 1000, R_disc = 10,
                        Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                       loss_exp = c(2,2,2), S_initial = 1, plot = TRUE, tol = 0.99, rep_rrv = FALSE){
+                       loss_exp = c(2,2,2), S_initial = 1, plot = TRUE, tol = 0.99){
   
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")
@@ -318,7 +317,7 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
   if(plot) {
     plot(R_rec, ylab = "Controlled release", ylim = c(0, R_max)); abline(h = target, lty = 2)
     plot(S, ylab = "Storage", ylim = c(0, capacity)); abline(h = vol_targ * capacity, lty = 2)
-    plot(Spill, ylab = "Uncontrolled spill")
+    plot(Spill, ylab = "Uncontrolled spill"); abline(h = quantile(Q, spill_targ), lty = 2)
   }
   
   total_release_cost <- sum((1 - R_rec/target)[which((R_rec/target) <  1)] ^ loss_exp[1])
@@ -328,57 +327,9 @@ sdp_multi <- function (Q, capacity, target, surface_area, max_depth, evap,
   costs <- list(total_release_cost, total_spill_cost, total_volume_cost, total_weighted_cost)
   names(costs) <- c("total_release_cost", "total_spill_cost", "total_volume_cost", "total_weighted_cost")
   
-  if (rep_rrv == TRUE){
-    
-    # COMPUTE RRV METRICS FROM SIMULATION RESULTS---------------------------------------
-    
-    deficit <- ts(round(1 - (R_rec / target),5), start = start(Q), frequency = frequency(Q))
-    rel_ann <- sum(aggregate(deficit, FUN = mean) == 0) /
-      length(aggregate(deficit, FUN = mean))
-    rel_time <- sum(deficit == 0) / length(deficit)
-    rel_vol <- sum(R_rec) / (target * length(deficit))
-    fail.periods <- which(deficit > 0)
-    if (length(fail.periods) == 0) {
-      resilience <- NA
-      vulnerability <- NA
-    } else {
-      if (length(fail.periods) == 1) {
-        resilience <- 1
-        vulnerability <- max(deficit)
-      } else {
-        resilience <- (sum(diff(which(deficit > 0)) > 1) + 1) / (length(which(deficit > 0)))
-        fail.refs <- vector("numeric", length = length(fail.periods))
-        fail.refs[1] <- 1
-        for (j in 2:length(fail.periods)) {
-          if (fail.periods[j] > (fail.periods[j - 1] + 1)) {
-            fail.refs[j] <- fail.refs[j - 1] + 1
-          } else {
-            fail.refs[j] <- fail.refs[j - 1]
-          }
-        }
-        n.events <- max(fail.refs)
-        event.starts <- by(fail.periods, fail.refs, FUN = min)
-        event.ends <- by(fail.periods, fail.refs, FUN = max)
-        max.deficits <- vector("numeric", length = n.events)
-        for (k in 1:n.events) {
-          max.deficits[k] <- max(deficit[event.starts[k]:event.ends[k]])
-        }
-        
-        vulnerability <- mean(max.deficits)
-      }
-    }
-    
-    #===============================================================================
-    
-    results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, rel_ann, rel_time, rel_vol, resilience, vulnerability, Q_disc, costs)
-    names(results) <- c("release_policy", "Bellman", "storage", "releases", "evap_loss", "water_level", "spill", "annual_reliability",
-                        "time_based_reliability", "volumetric_reliability",
-                        "resilience", "vulnerability", "flow_disc", "costs")
-
-  } else {
-    results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, Q_disc, costs)
-    names(results) <- c("release_policy", "Bellman", "storage", "releases", "evap_loss", "water_level", "spill", "flow_disc", "total_costs")
-  }
+  results <- list(R_policy, Bellman, S, R_rec, E, y, Spill, Q_disc, costs)
+  names(results) <- c("release_policy", "Bellman", "storage", "releases", "evap_loss", "water_level", "spill", "flow_disc", "total_costs")
+  
   
   return(results)
 }
