@@ -1,30 +1,30 @@
 #' @title Reliability, resilience, and vulnerability analysis for water supply reservoirs
 #' @description Computes time-based, annual, and volumetric reliability, as well as resilience and dimensionless vulnerability for a single reservoir.
-#' @param X                  time series object representing the release time series of a reservoir.
-#' @param target            numerical constant (or a vector of length = length(X)). If omitted then the trigger constant will be < max(X).
+#' @param x                  time series object representing the release time series of a reservoir.
+#' @param target            numerical constant (or a vector of length = length(x)). If omitted then the trigger constant will be < max(X).
 #' @return Returns reliability, resilience and vulnerability metrics based on supply deficits.
 #' @examples # Compare reliability, resilience and vulnerability for two operating policies (SOP and SDP).
 #' @import stats
 #' @export
-rrv <- function(X, target) {
+rrv <- function(x, target) {
   
-  if(is.ts(X) == FALSE) stop("X must be a time series object... use ts(X, ...)")
-  frq <- frequency(X)
-  len <- length(X)
+  if(is.ts(x) == FALSE) stop("X must be a time series object... use ts(x, ...)")
+  frq <- frequency(x)
+  len <- length(x)
   
   if(length(target) == 1) {
     target <- rep(target, len)
   }
   if(length(target) != len) {
     stop(paste0("target must be a scalar constant or vector or time series of length = ",
-                len, " for this input time series, X"))
+                len, " for this input time series, x"))
   }
   
-  deficit <- ts(round(1 - (X / target),5), start = start(X), frequency = frq)
+  deficit <- ts(round(1 - (x / target),5), start = start(x), frequency = frq)
   rel_ann <- sum(aggregate(deficit, FUN = mean) <= 0) /
     length(aggregate(deficit, FUN = mean))
   rel_time <- sum(deficit <= 0) / length(deficit)
-  rel_vol <- sum(X) / sum(target)
+  rel_vol <- sum(x) / sum(target)
   fail.periods <- which(deficit > 0)
   if (length(fail.periods) == 0) {
     resilience <- NA
@@ -52,7 +52,7 @@ rrv <- function(X, target) {
         max.deficits[k] <- max(deficit[event.starts[k]:event.ends[k]])
       }
       vulnerability <- mean(max.deficits)
-    }
+    } 
   }
   
   #===============================================================================

@@ -4,12 +4,12 @@
 \alias{rrv}
 \title{Reliability, resilience, and vulnerability analysis for water supply reservoirs}
 \usage{
-rrv(X, target)
+rrv(x, target)
 }
 \arguments{
-\item{X}{time series object representing the release time series of a reservoir.}
+\item{x}{time series object representing the release time series of a reservoir.}
 
-\item{target}{numerical constant (or a vector of length = length(X)). If omitted then the trigger constant will be < max(X).}
+\item{target}{numerical constant (or a vector of length = length(x)). If omitted then the trigger constant will be < max(X).}
 }
 \value{
 Returns reliability, resilience and vulnerability metrics based on supply deficits.

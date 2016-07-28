@@ -7,7 +7,7 @@
 critPeriod(x, report)
 }
 \arguments{
-\item{x}{vector or time series object.}
+\item{x}{vector or time series object giving the reservoir storage behaviour. The sequence should contain at least one zero values for the critical period to be estimated.}
 
 \item{report}{character string giving the critical period to report... "shortest" (default) returns shortest of all critical periods (i.e., the most severe drought); "average" returns the mean of all critical periods; "longest" returns the longest critical drawdown period; "all" returns all critical drawdown periods in the time series.}
 }

@@ -83,8 +83,8 @@ storage <- function(Q, yield, reliability, demand_profile,
         plot(R, ylim = c(0, max(R)), ylab = "Water supplied")
         plot(Spill, ylab = "Spill")
     }
-    message(paste0("Converged after ", i,
-                 " iterations and time-based reliability equal to ", reliability))
+    #message(paste0("Converged after ", i,
+    #             " iterations and time-based reliability equal to ", reliability))
     
     results <- list(mid_storage, S, R, Spill)
     names(results) <- c("Required_storage", "Storage", "Water_supplied", "Spill")

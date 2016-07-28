@@ -21,4 +21,5 @@ LazyData: yes
 Imports:
     gtools,
     stats,
-    graphics
+    graphics,
+    moments
