@@ -93,7 +93,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
       }
       if(sum(q_test != length(Q_disc) - 1) > 0){
         Markov <- FALSE
-        message(paste0("Could not discretize flows... setting Markov = FALSE for period beginning ", start(Q)[1]))
+        message("Could not discretize flows... setting Markov = FALSE")
       } else {
         Markov <- TRUE
       }
