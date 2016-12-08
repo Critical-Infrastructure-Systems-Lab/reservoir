@@ -9,12 +9,12 @@ Authors@R: c(
     person("Stefano", "Galelli", , "stefano_galelli@sutd.edu.sg", "aut")
     )
 URL: https://cran.r-project.org/package=reservoir
-Description: Measure single-storage water supply system performance using resilience,
-    reliability, and vulnerability metrics; assess storage-yield-reliability
-    relationships; determine no-fail storage with sequent peak analysis; optimize
-    release decisions for water supply, hydropower, and multi-objective reservoirs
-    using deterministic and stochastic dynamic programming; generate inflow
-    replicates using parametric and non-parametric models; evaluate inflow
+Description: Measure single-storage water supply system performance using
+    resilience, reliability, and vulnerability metrics; assess storage-yield-
+    reliability relationships; determine no-fail storage with sequent peak analysis;
+    optimize release decisions for water supply, hydropower, and multi-objective
+    reservoirs using deterministic and stochastic dynamic programming; generate
+    inflow replicates using parametric and non-parametric models; evaluate inflow
     persistence using the Hurst coefficient.
 License: GPL (>= 2)
 LazyData: yes
@@ -23,3 +23,4 @@ Imports:
     stats,
     graphics,
     moments
+RoxygenNote: 5.0.1

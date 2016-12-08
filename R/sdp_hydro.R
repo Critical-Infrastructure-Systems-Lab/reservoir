@@ -17,6 +17,7 @@
 #' @param plot          logical. If TRUE (the default) the storage behavior diagram and release time series are plotted.
 #' @param tol           numerical. The tolerance for policy convergence. The default value is 0.990.
 #' @param Markov        logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.
+#' @param envFlow       logical. If TRUE an environmental flow constraint is applied in simulation.
 #' @return Returns the optimal release policy, associated Bellman function, simulated storage, release, evaporation, depth, uncontrolled spill, and power generated, and total energy generated.
 #' @seealso \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
 #' @examples layout(1:4)
@@ -30,7 +31,8 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
                        surface_area, max_depth, evap, installed_cap, head, qmax,
                        efficiency = 0.9, S_disc = 1000, R_disc = 10,
                        Q_disc = c(0.0, 0.2375, 0.4750, 0.7125, 0.95, 1.0),
-                       S_initial = 1, plot = TRUE, tol = 0.99, Markov = FALSE){
+                       S_initial = 1, plot = TRUE, tol = 0.99,
+                       Markov = FALSE, envFlow = FALSE){
   
   frq <- frequency(Q)
   if (is.ts(Q)==FALSE) stop("Q must be seasonal time series object with frequency of 12 or 4")
@@ -75,6 +77,30 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
   }
   
   evap_seas <- as.vector(tapply(evap, cycle(evap), FUN = mean))
+  
+  
+  ## Q_disc ERROR TRAP
+  if (Markov == TRUE){
+    Q_month_mat_ <- matrix(Q, byrow = TRUE, ncol = frq) 
+    n_Qcl_ <- length(Q_disc) - 1
+    q_test <- rep(NA, frq)
+    if (sum(apply(Q_month_mat_, 2, sum) == 0) > 0){
+      Markov = FALSE
+      message(paste0("Could not discretize flows... setting Markov = FALSE for period beginning ", start(Q)[1]))
+    }else{
+      for (m in 1:frq){
+        q_test[m] <- length(levels(gtools::quantcut(Q_month_mat_[,m], Q_disc)))
+      }
+      if(sum(q_test != length(Q_disc) - 1) > 0){
+        Markov <- FALSE
+        message(paste0("Could not discretize flows... setting Markov = FALSE for period beginning ", start(Q)[1]))
+      } else {
+        Markov <- TRUE
+      }
+    }
+  }
+  ##-----------##
+  
 
   # SET UP (non-Markov)---------------------------------------------------------------------------
   
@@ -185,7 +211,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
   S_area_rel <- GetArea(c, V = S_states * 10 ^ 6)
   
   
-  message(paste0("policy converging... (>", tol,")"))
+  message("Optimizing release policy...")
   
   # POLICY OPTIMIZATION (non-Markov)-------------------------------------------------------------
   
@@ -215,7 +241,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         Results_mat[,t] <- Rev_to_go
         R_policy[,t] <- apply(Max_rev_expected, 1, which.max)
       }
-      message(sum(R_policy == R_policy_test) / (frq * length(S_states)))   
+      #message(sum(R_policy == R_policy_test) / (frq * length(S_states)))   
       if (sum(R_policy == R_policy_test) / (frq * length(S_states)) >= tol){
         break
       }
@@ -254,7 +280,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
         Rev_to_go <- apply( (Rev_arr + Exp.arr), c(1,3), max, na.rm = TRUE)
         Bellman[,,t] <- Rev_to_go
       }
-      message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
+      #message(sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl))   
       if (sum(R_policy == R_policy_test) / (frq * length(S_states) * n_Qcl) >= tol){
         break
       }
@@ -266,44 +292,102 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
   
   # POLICY SIMULATION------------------------------------------------------------------
   
-  S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
-  R_rec <- vector("numeric",length(Q))
-  E <- vector("numeric", length(Q))
-  y <- vector("numeric", length(Q))
-  Spill <- vector("numeric", length(Q))
-  Power <- vector("numeric", length(Q))
-  for (yr in 1:nrow(Q_month_mat)) {
-    for (month in 1:frq) {
-      t_index <- (frq * (yr - 1)) + month   
-      S_state <- which.min(abs(S_states - S[t_index]))
-      Qx <- Q_month_mat[yr,month]
-      if (Markov == FALSE){
-        R <- R_disc_x[R_policy[S_state,month]]
-      } else if (Markov == TRUE){
-        Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
-        R <- R_disc_x[R_policy[S_state,Q_class,month]]
-      }
-      R <- min(R, S[t_index] + Qx - (capacity - capacity_live))
-      R_rec[t_index] <- R
-      E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
-      y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
-      
-      
-      if ( (S[t_index] - R + Qx - E[t_index]) > capacity) {
-        S[t_index + 1] <- capacity
-        Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]
-      }else{
-        if ( (S[t_index] - R + Qx - E[t_index]) < 0) {
-          S[t_index + 1] <- 0
-          R_rec[t_index] <- max(0, S[t_index] + Qx - E[t_index])
-        }else{
-          S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
+  if (envFlow == FALSE){
+    message("simulating...")
+    S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
+    R_rec <- vector("numeric",length(Q))
+    E <- vector("numeric", length(Q))
+    y <- vector("numeric", length(Q))
+    Spill <- vector("numeric", length(Q))
+    Power <- vector("numeric", length(Q))
+    for (yr in 1:nrow(Q_month_mat)) {
+      for (month in 1:frq) {
+        t_index <- (frq * (yr - 1)) + month   
+        S_state <- which.min(abs(S_states - S[t_index]))
+        Qx <- Q_month_mat[yr,month]
+        if (Markov == FALSE){
+          R <- R_disc_x[R_policy[S_state,month]]
+        } else if (Markov == TRUE){
+          Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
+          R <- R_disc_x[R_policy[S_state,Q_class,month]]
         }
+        R <- min(R, S[t_index] + Qx - (capacity - capacity_live))
+        R_rec[t_index] <- R
+        E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = R, ev = evap[t_index])
+        y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
+        
+        
+        if ( (S[t_index] - R + Qx - E[t_index]) > capacity) {
+          S[t_index + 1] <- capacity
+          Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]
+        }else{
+          if ( (S[t_index] - R + Qx - E[t_index]) < 0) {
+            S[t_index + 1] <- 0
+            R_rec[t_index] <- max(0, S[t_index] + Qx - E[t_index])
+          }else{
+            S[t_index + 1] <- S[t_index] - R + Qx - E[t_index]
+          }
+        }
+        Power[t_index] <- max(efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:(t_index + 1)]) * (10 ^ 6)) + yconst) * 
+                                R_rec[t_index] / (365.25 / frq * 24 * 60 * 60), 0)
       }
-      Power[t_index] <- max(efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:(t_index + 1)]) * (10 ^ 6)) + yconst) * 
-                              R_rec[t_index] / (365.25 / frq * 24 * 60 * 60), 0)
+    }
+  } else if (envFlow == TRUE){
+    message("Simulating with environmental flow allocation...")
+    
+    inflow_mmf <- as.vector(tapply(Q, cycle(Q), FUN = mean))
+    inflow_maf <- mean(Q)
+    inflow_efr_perc <- rep(NA, 12)
+    inflow_efr_perc[inflow_mmf < 0.4 * inflow_maf] <- 0.6
+    inflow_efr_perc[inflow_mmf >= 0.4 * inflow_maf & inflow_mmf <= 0.8 * inflow_maf] <- 0.45
+    inflow_efr_perc[inflow_mmf > 0.8 * inflow_maf] <- 0.3
+    inflow_efr_perc[inflow_mmf < 1] <- 0
+    env_flow <- inflow_efr_perc * inflow_mmf
+    
+    S <- vector("numeric",length(Q) + 1); S[1] <- S_initial * capacity    
+    R_rec <- vector("numeric",length(Q))
+    E <- vector("numeric", length(Q))
+    y <- vector("numeric", length(Q))
+    Spill <- vector("numeric", length(Q))
+    Power <- vector("numeric", length(Q))
+    for (yr in 1:nrow(Q_month_mat)) {
+      for (month in 1:frq) {
+        t_index <- (frq * (yr - 1)) + month   
+        S_state <- which.min(abs(S_states - S[t_index]))
+        Qx <- Q_month_mat[yr,month]
+        if (Markov == FALSE){
+          R <- R_disc_x[R_policy[S_state,month]]
+        } else if (Markov == TRUE){
+          Q_class <- which.min(abs(as.vector(Q_class_med[,month] - Qx)))
+          R <- R_disc_x[R_policy[S_state,Q_class,month]]
+        }
+        env <- env_flow[month] #added
+        active <- S[t_index] + Qx - (capacity - capacity_live) # added
+        R <- min(min(max(R, env), active), qmax) #changed
+        R_rec[t_index] <- R
+        Spill[t_index] <- max(min(env - R, active - R), 0) #added
+        E[t_index] <- GetEvap(s = S[t_index], q = Qx, r = (R_rec[t_index] + Spill[t_index]), ev = evap[t_index]) #changed
+        y[t_index] <- GetLevel(c, S[t_index] * 10 ^ 6)
+        
+        
+        if ( (S[t_index] - R - Spill[t_index] + Qx - E[t_index]) > capacity) { #added spill part
+          S[t_index + 1] <- capacity
+          Spill[t_index] <- S[t_index] - R + Qx - capacity - E[t_index]
+        }else{
+          if ( (S[t_index] - R - Spill[t_index] + Qx - E[t_index]) < 0) { #added spill part
+            S[t_index + 1] <- 0
+            R_rec[t_index] <- min(max(0, S[t_index] + Qx - E[t_index]), qmax) #changed
+            Spill[t_index] <- max(max(0, S[t_index] + Qx - E[t_index]) - R_rec[t_index], 0) #added
+          }else{
+            S[t_index + 1] <- S[t_index] - R - Spill[t_index] + Qx - E[t_index] #added spill part
+          }
+        }
+        Power[t_index] <- max(efficiency * 1000 * 9.81 * (GetLevel(c,mean(S[t_index:(t_index + 1)]) * (10 ^ 6)) + yconst) * 
+                                R_rec[t_index] / (365.25 / frq * 24 * 60 * 60), 0)
+      }
     }
   }
+  
   R_policy <- (R_policy - 1) / R_disc
   S <- ts(S[1:(length(S) - 1)],start = start(Q),frequency = frq)
   R_rec <- ts(R_rec, start = start(Q), frequency = frq)
@@ -313,6 +397,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
   Power <- ts(Power, start = start(Q), frequency = frq)
   Energy_MWh <- sum(Power * (365.25 / frq) * 24)
   
+
   if(plot) {
     plot(R_rec, ylab = "Turbined release [Mm3]", ylim = c(0, qmax), main = paste0("Total output = ", round(Energy_MWh/1000000, 3), " TWh"))
     plot(Power, ylab = "Power [MW]", ylim = c(0, installed_cap))
@@ -326,6 +411,6 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
                       "releases", "evap_loss", "water_level",
                       "spill", "power", "flow_disc", "Energy_MWh")
   
-  
+  message("Done!")
   return(results)
 }
