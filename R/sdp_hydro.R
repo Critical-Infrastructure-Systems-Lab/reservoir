@@ -86,7 +86,7 @@ sdp_hydro <- function (Q, capacity, capacity_live = capacity,
     q_test <- rep(NA, frq)
     if (sum(apply(Q_month_mat_, 2, sum) == 0) > 0){
       Markov = FALSE
-      message(paste0("Could not discretize flows... setting Markov = FALSE for period beginning ", start(Q)[1]))
+      message("Could not discretize flows... setting Markov = FALSE")
     }else{
       for (m in 1:frq){
         q_test[m] <- length(levels(gtools::quantcut(Q_month_mat_[,m], Q_disc)))
