@@ -1,0 +1,62 @@
+---
+title: "Prerequisits"
+author: ''
+date: ''
+output:
+  rmarkdown::html_document:
+    highlight: default
+    theme: journal
+  rmarkdown::pdf_document: null
+subtitle: Manual for R package `reservoir`
+---
+
+
+## Step 1: Get R and R Studio
+
+***R*** is an open source, statistical programming environment, popular with academics in a variety of fields, including hydrology and water resources engineering.
+
+You can download and install the latest version of R from https://cran.r-project.org/.
+
+***R Studio*** is a powerful Integrated Development Environment (IDE) for R. Whislt an IDE is not absolutely necessary to use `reservoir`---or indeed any R library---it makes life lot easier. There are various IDEs for R, but R Studio is the most popular and its capabilities extend well beyond writing basic R code (this manual was written using R Studio, for instance).
+
+Download and install the latest version of R-Studio from https://www.rstudio.com/products/rstudio/download/.
+
+Some basic knowledge of R is recommended (though not absolutely necessary) for following this manual and working with *reservoir*. Here are some popular introductory courses for first-time users:
+
+* [DataCamp's free introduction to R](https://www.datacamp.com/courses/free-introduction-to-r)
+
+* [ComputerWorld's Beginners Guide to R](http://www.computerworld.com/article/2497143/business-intelligence/business-intelligence-beginner-s-guide-to-r-introduction.html)
+
+* [swirl](http://swirlstats.com/)
+
+
+## Step 2: Get the *reservoir* package
+
+You can download reservoir directly from the R console. Two versions will be available at any time: a stable release version (recommended), stored on the Comprehensive R Archive Network (CRAN), and a development version, stored on Github.
+
+You can get the release (CRAN) version using `install.packages`:
+
+```{r, eval=FALSE}
+install.packages("reservoir")
+```
+
+New developments to *reservoir* won't be always be available on CRAN. If you want to make sure you have all new features, you can install the development version using `devtools`:
+
+```{r, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("swd-turner/reservoir")
+```
+
+Once installed, load *reservoir* into the working environment using:
+```{r, eval=FALSE}
+library("reservoir")
+```
+
+Access package documentation using:
+```{r, eval=FALSE}
+?reservoir
+```
+
+
+
+

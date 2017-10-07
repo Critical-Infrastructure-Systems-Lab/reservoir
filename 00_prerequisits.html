@@ -124,27 +124,27 @@ $(document).ready(function () {
 <div id="step-1-get-r-and-r-studio" class="section level2">
 <h2>Step 1: Get R and R Studio</h2>
 <p><strong><em>R</em></strong> is an open source, statistical programming environment, popular with academics in a variety of fields, including hydrology and water resources engineering.</p>
-<p>Download and install the latest version of R from <a href="https://cran.r-project.org/" class="uri">https://cran.r-project.org/</a>.</p>
-<p><strong><em>R Studio</em></strong> is a powerful Integrated Development Environment (IDE) for R. Whislt an IDE is not absolutely necessary to use <code>reservoir</code>—or indeed any R library—it makes life lot easier. There are various IDEs for R, but R Studio is the undoubtedly the most popular and its capabilities extend well beyond writing basic R code (this manual was written using R Studio, for instance).</p>
+<p>You can download and install the latest version of R from <a href="https://cran.r-project.org/" class="uri">https://cran.r-project.org/</a>.</p>
+<p><strong><em>R Studio</em></strong> is a powerful Integrated Development Environment (IDE) for R. Whislt an IDE is not absolutely necessary to use <code>reservoir</code>—or indeed any R library—it makes life lot easier. There are various IDEs for R, but R Studio is the most popular and its capabilities extend well beyond writing basic R code (this manual was written using R Studio, for instance).</p>
 <p>Download and install the latest version of R-Studio from <a href="https://www.rstudio.com/products/rstudio/download/" class="uri">https://www.rstudio.com/products/rstudio/download/</a>.</p>
-<p>If you have never used R before, some basic introduction is recommended before attempting the exercises in this manual (although this isn’t strictly necessary as step-by-step code is given for all examples). Some popular starter courses are:</p>
+<p>Some basic knowledge of R is recommended (though not absolutely necessary) for following this manual and working with <em>reservoir</em>. Here are some popular introductory courses for first-time users:</p>
 <ul>
 <li><p><a href="https://www.datacamp.com/courses/free-introduction-to-r">DataCamp’s free introduction to R</a></p></li>
 <li><p><a href="http://www.computerworld.com/article/2497143/business-intelligence/business-intelligence-beginner-s-guide-to-r-introduction.html">ComputerWorld’s Beginners Guide to R</a></p></li>
 <li><p><a href="http://swirlstats.com/">swirl</a></p></li>
 </ul>
-<p>The best thing about R is that it’s open source, and so there are thousands of users worldwide continually sharing … If you ever get stuck then there’s a strong chance that someone else has encountered the same problem and requested help on a user forum, such as Stack Overflow.</p>
 </div>
 <div id="step-2-get-the-reservoir-package" class="section level2">
 <h2>Step 2: Get the <em>reservoir</em> package</h2>
-<p><em>reservoir</em> is available on the Comprehensive R Archive Network, or, ‘CRAN’. Packages on CRAN can be downloaded using <code>install.packages</code>:</p>
+<p>You can download reservoir directly from the R console. Two versions will be available at any time: a stable release version (recommended), stored on the Comprehensive R Archive Network (CRAN), and a development version, stored on Github.</p>
+<p>You can get the release (CRAN) version using <code>install.packages</code>:</p>
 <pre class="r"><code>install.packages(&quot;reservoir&quot;)</code></pre>
-<p>Sometimes new developments to the package won’t be immediately available on the CRAN version. As of writing, the CRAN version contains everything described in this manual. But if you want to make sure you have all new features, you can install the development version from github. The easiest way to install a package from github is to use <code>devtools</code> as follows:</p>
+<p>New developments to <em>reservoir</em> won’t be always be available on CRAN. If you want to make sure you have all new features, you can install the development version using <code>devtools</code>:</p>
 <pre class="r"><code>install.packages(&quot;devtools&quot;)
 devtools::install_github(&quot;swd-turner/reservoir&quot;)</code></pre>
-<p>Finally, load <em>reservoir</em> into your working environment using:</p>
+<p>Once installed, load <em>reservoir</em> into the working environment using:</p>
 <pre class="r"><code>library(&quot;reservoir&quot;)</code></pre>
-<p>You can start to browse through the help material for <code>reservoir</code> using:</p>
+<p>Access package documentation using:</p>
 <pre class="r"><code>?reservoir</code></pre>
 </div>
 

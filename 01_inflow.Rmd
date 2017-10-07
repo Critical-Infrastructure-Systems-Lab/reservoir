@@ -1,0 +1,102 @@
+---
+title: 'Chapter 1: Inflow time series and stochastic techniques'
+author: ''
+date: ''
+output:
+  rmarkdown::html_document:
+    highlight: default
+    theme: journal
+  rmarkdown::pdf_document: null
+subtitle: Manual for R package `reservoir`
+---
+
+### *In this chapter:*
+
+* *Understand the role of inflows in reservoir modelling*
+
+* *Create time series (`ts`) objects from vectors*
+
+* *Inspect and analyse `ts` objectes*
+
+* *Generate synthetic inflow replicates using stochastic models*
+
+## Modelling a reservoir
+
+Reservoir simulation and optimization models are built around the very basic assumption of mass balance:
+
+$S_{t+1} = S_{t} + Q_{t} - R_{t} - L_{t}$
+
+_subject to:_
+
+$0 \le R_{t} \le \min(S_{t} + Q_{t} - L_{t}, R_{max})$
+
+$0 \le S_{t} \le S_{max}$
+
+
+where $S_{t}$ is the volume of water in storage, $Q_{t}$ __is the inflow to the reservoir__, $R_{t}$ is the release from the reservoir and $L_{t}$ represents other losses (evaporation, seepage) at time period $t$. $S{max}$ is the maximum storage (or the capacity) of the reservoir and $R{max}$ the maximum controlled release (which may be water released downstream, water withdrawn for supply, or a combination of both). The equation states that the storage in the next time period (e.g., next day, month, year) will be equal storage in the current time period plus the balance of inflows ($Q$) minus outflows ($R$ and $L$). Since the reservoir is finite, it is not possible to release more than is available in storage and incoming flow (first constraint). If outflows exceed inflows, storage levels will decrease---unless the reservoir is empty. If inflows exceed outflows, storage levels will increase---unless the reservoir is full, in which case excess water will be spilled. 
+
+Typically a reservoir modelling exercise will involve some adjustment of the release or storage capacity and analysis of resulting storage behavior through time. The time series of inflows ($Q$) is a fixed input to this process. Inflows determine how much water can be continually released from a reservoir (its *yield*) and how often and quickly the reservoir will fill and empty. Ultimately the purpose of a reservoir is to provide storage so that inflows are __regulated__ for some useful purpose, like flood protection (reduce peak inflows by charging up storage during a storm) or water supply (prevent water shortage by releasing stored water during drought). A modeller will usually use the streamflow just upstream of the reservoir to represent the inflow, although more rigorous studies might also incorporate natural flows entering from embankments as well rainfall directly into storage. Inflows can also be back-calculated from storage measurements if the downstream release and losses are known.
+
+`reservoir` comes with an example inflow time series, stored inside the `resX` object:
+
+```{r}
+library(reservoir)
+inflow <- resX$Q_Mm3
+plot(inflow, ylab = "Inflow (Million cubic meters)")
+```
+
+Note that the plot already includes time information along the x-axis. This is because the sequence of inflows is stored as a time-stamped vectors, known as a time series, or `ts` object. In `reservoir`, most functions require that the inflow data are input as `ts` objects. `ts` objects provide a range of additional capabilities and advantages over ordinary vectors and the purpose of this chapter is to introduce how to work with `ts` objects in order to make the most of `reservoir`.
+
+## Working with `ts` (time series) objects
+
+In R, a time series object is simply a vector of evenly-spaced, time-ordered observations. To illustrate, consider a simple vector, X, comprising 24 observations of some variable.
+
+```{r}
+X <- rnorm(120)  # 120 random values from a standard, normal distribution
+head(X)
+plot(X)
+```
+
+If X is a monthly time series (i.e., observations taken each month) with a known start date (say, January 2005), then it can be transformed to a time series object as follows:
+
+```{r}
+X_ts <- ts(X, start = c(2005, 1), frequency = 12)
+head(X_ts)
+plot(X_ts)
+```
+
+
+`reservoir` recognises when user input data is in the form of a time series, and performs its operations accordingly. 
+
+```{r}
+Q <- resX$Q_Mm3
+start(Q)
+end(Q)
+frequency(Q)
+plot(Q)
+monthplot(Q)
+Q_post_1980 <- window(Q, start = c(1980))
+Q_pre_1980 <- window(Q, end = c(1979))
+plot(Q); lines(Q_pre_1980, col = "blue"); lines(Q_post_1980, col = "red")
+Q_annual <- aggregate(Q, FUN = mean) # mean annual inflows
+plot(Q); lines(Q_annual, lwd = 3)
+```
+
+The `cycle` command can also be useful for determining seasonal statistics of a time series:
+
+```{r}
+monthly_mean <- tapply(Q, cycle(Q), mean)
+monthly_sd <- tapply(Q, cycle(Q), sd)
+```
+
+Other supporting packages offer additional functionality. For example, the `lattice` packages allows for easier inspection of a long time series by cutting into chunks:
+
+```{r}
+lattice::xyplot.ts(Q, cut = 5)
+```
+
+There are also numerous packages and features for building statistical time series models using `ts` objects.
+
+
+
+
