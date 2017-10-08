@@ -3,10 +3,10 @@ title: 'Chapter 1: Inflow time series and stochastic techniques'
 author: ''
 date: ''
 output:
+  rmarkdown::pdf_document: null
   rmarkdown::html_document:
     highlight: default
     theme: journal
-  rmarkdown::pdf_document: null
 subtitle: Manual for R package `reservoir`
 ---
 
@@ -37,19 +37,20 @@ where $S_{t}$ is the volume of water in storage, $Q_{t}$ __is the inflow to the 
 
 Typically a reservoir modelling exercise will involve some adjustment of the release or storage capacity and analysis of resulting storage behavior through time. The time series of inflows ($Q$) is a fixed input to this process. Inflows determine how much water can be continually released from a reservoir (its *yield*) and how often and quickly the reservoir will fill and empty. Ultimately the purpose of a reservoir is to provide storage so that inflows are __regulated__ for some useful purpose, like flood protection (reduce peak inflows by charging up storage during a storm) or water supply (prevent water shortage by releasing stored water during drought). A modeller will usually use the streamflow just upstream of the reservoir to represent the inflow, although more rigorous studies might also incorporate natural flows entering from embankments as well rainfall directly into storage. Inflows can also be back-calculated from storage measurements if the downstream release and losses are known.
 
-`reservoir` comes with an example inflow time series, stored inside the `resX` object:
+`reservoir` comes with an example inflow time series, stored inside an object named `resX`:
 
 ```{r}
 library(reservoir)
-inflow <- resX$Q_Mm3
-plot(inflow, ylab = "Inflow (Million cubic meters)")
+str(resX)  # View the contents of the resX object
+Q <- resX$Q_Mm3
+plot(Q, ylab = "Inflow (Million cubic meters)")
 ```
 
-Note that the plot already includes time information along the x-axis. This is because the sequence of inflows is stored as a time-stamped vectors, known as a time series, or `ts` object. In `reservoir`, most functions require that the inflow data are input as `ts` objects. `ts` objects provide a range of additional capabilities and advantages over ordinary vectors and the purpose of this chapter is to introduce how to work with `ts` objects in order to make the most of `reservoir`.
+Note that the plot already includes time information along the x-axis. This is because the sequence of inflows is stored as a time-stamped vector, known as a time series, or `ts` object. In `reservoir`, most functions require that the inflow data are input as `ts` objects. `ts` objects provide a range of advantages over ordinary vectors. The purpose of this chapter is to introduce you `ts` objects so you can make the most out of the capabilities in `reservoir`.
 
 ## Working with `ts` (time series) objects
 
-In R, a time series object is simply a vector of evenly-spaced, time-ordered observations. To illustrate, consider a simple vector, X, comprising 24 observations of some variable.
+In R, a time series object is simply a vector of evenly-spaced, time-ordered observations. To illustrate, consider a simple vector, `X`, comprising 120 observations of some variable.
 
 ```{r}
 X <- rnorm(120)  # 120 random values from a standard, normal distribution
@@ -57,7 +58,7 @@ head(X)
 plot(X)
 ```
 
-If X is a monthly time series (i.e., observations taken each month) with a known start date (say, January 2005), then it can be transformed to a time series object as follows:
+If `X` is a monthly time series (i.e., observations taken each month) with a known start date (say, January 2005), then it can be transformed to a time series object as follows:
 
 ```{r}
 X_ts <- ts(X, start = c(2005, 1), frequency = 12)
@@ -65,38 +66,53 @@ head(X_ts)
 plot(X_ts)
 ```
 
-
-`reservoir` recognises when user input data is in the form of a time series, and performs its operations accordingly. 
+`ts` objects are easy to inspect:
 
 ```{r}
-Q <- resX$Q_Mm3
 start(Q)
 end(Q)
 frequency(Q)
 plot(Q)
 monthplot(Q)
+```
+
+`ts` objects are easy to work with and manipulate, too:
+
+```{r}
 Q_post_1980 <- window(Q, start = c(1980))
 Q_pre_1980 <- window(Q, end = c(1979))
 plot(Q); lines(Q_pre_1980, col = "blue"); lines(Q_post_1980, col = "red")
-Q_annual <- aggregate(Q, FUN = mean) # mean annual inflows
+Q_annual <- aggregate(Q, FUN = mean) # get mean annual inflows
 plot(Q); lines(Q_annual, lwd = 3)
 ```
 
-The `cycle` command can also be useful for determining seasonal statistics of a time series:
+
+If you want to look at seasonal statistics, the `cycle` function is useful:
 
 ```{r}
-monthly_mean <- tapply(Q, cycle(Q), mean)
-monthly_sd <- tapply(Q, cycle(Q), sd)
+tapply(Q, cycle(Q), mean)  # get monthly means
+tapply(Q, cycle(Q), sd)  # get monthly standard deviations
 ```
 
-Other supporting packages offer additional functionality. For example, the `lattice` packages allows for easier inspection of a long time series by cutting into chunks:
+Other supporting packages offer additional functionality. For example, you can use the `lattice` package to inspect a long time series by cutting into chunks:
 
 ```{r}
 lattice::xyplot.ts(Q, cut = 5)
 ```
 
-There are also numerous packages and features for building statistical time series models using `ts` objects.
+`reservoir` recognises when user input data is in the form of a time series, and performs its operations accordingly.
 
 
+## Generate stochastic inflow replicates using `dirtyreps`
+
+Inflow replicates are used in reservoir design and analysis to explore uncertainty. For example, with an inflow time series you can compute the storage capacity required to meet a given demand for water without reservoir failure. This is called the _no fail storage_. Given the importance of no fail storage to the design exercise, you might want to evaluate its uncertainty given the known inflow variability. You can do this by re-computing the no fail storage (or any other design or performance metric) multiple times under _stochastic replicates_ of the inflow time series.
+
+```{r}
+Q_reps <- dirtyreps(Q, reps = 10)
+head(Q_reps)
+plot(Q_reps)
+```
+
+In the next chapter, you'll put stochastic inflow replicates into practice to compute uncertainty of some reservoir summary statistics.
 
 

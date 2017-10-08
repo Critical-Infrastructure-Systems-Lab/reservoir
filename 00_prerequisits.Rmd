@@ -3,10 +3,10 @@ title: "Prerequisits"
 author: ''
 date: ''
 output:
+  rmarkdown::pdf_document: null
   rmarkdown::html_document:
     highlight: default
     theme: journal
-  rmarkdown::pdf_document: null
 subtitle: Manual for R package `reservoir`
 ---
 
