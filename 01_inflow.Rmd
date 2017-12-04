@@ -3,10 +3,10 @@ title: 'Chapter 1: Inflow time series and stochastic techniques'
 author: ''
 date: ''
 output:
-  rmarkdown::pdf_document: null
   rmarkdown::html_document:
     highlight: default
     theme: journal
+  rmarkdown::pdf_document: null
 subtitle: Manual for R package `reservoir`
 ---
 
@@ -42,8 +42,8 @@ Typically a reservoir modelling exercise will involve some adjustment of the rel
 ```{r}
 library(reservoir)
 str(resX)  # View the contents of the resX object
-Q <- resX$Q_Mm3
-plot(Q, ylab = "Inflow (Million cubic meters)")
+inflow <- resX$Q_Mm3
+plot(inflow, ylab = "Inflow (Million cubic meters)")
 ```
 
 Note that the plot already includes time information along the x-axis. This is because the sequence of inflows is stored as a time-stamped vector, known as a time series, or `ts` object. In `reservoir`, most functions require that the inflow data are input as `ts` objects. `ts` objects provide a range of advantages over ordinary vectors. The purpose of this chapter is to introduce you `ts` objects so you can make the most out of the capabilities in `reservoir`.
@@ -69,35 +69,35 @@ plot(X_ts)
 `ts` objects are easy to inspect:
 
 ```{r}
-start(Q)
-end(Q)
-frequency(Q)
-plot(Q)
-monthplot(Q)
+start(inflow)
+end(inflow)
+frequency(inflow)
+plot(inflow)
+monthplot(inflow)
 ```
 
 `ts` objects are easy to work with and manipulate, too:
 
 ```{r}
-Q_post_1980 <- window(Q, start = c(1980))
-Q_pre_1980 <- window(Q, end = c(1979))
-plot(Q); lines(Q_pre_1980, col = "blue"); lines(Q_post_1980, col = "red")
-Q_annual <- aggregate(Q, FUN = mean) # get mean annual inflows
-plot(Q); lines(Q_annual, lwd = 3)
+inflow_post_1980 <- window(inflow, start = c(1980))
+inflow_pre_1980 <- window(inflow, end = c(1979))
+plot(inflow); lines(inflow_pre_1980, col = "blue"); lines(inflow_post_1980, col = "red")
+inflow_annual <- aggregate(inflow, FUN = mean) # get mean annual inflows
+plot(inflow); lines(inflow_annual, lwd = 3)
 ```
 
 
 If you want to look at seasonal statistics, the `cycle` function is useful:
 
 ```{r}
-tapply(Q, cycle(Q), mean)  # get monthly means
-tapply(Q, cycle(Q), sd)  # get monthly standard deviations
+tapply(inflow, cycle(inflow), mean)  # get monthly means
+tapply(inflow, cycle(inflow), sd)  # get monthly standard deviations
 ```
 
 Other supporting packages offer additional functionality. For example, you can use the `lattice` package to inspect a long time series by cutting into chunks:
 
 ```{r}
-lattice::xyplot.ts(Q, cut = 5)
+lattice::xyplot.ts(inflow, cut = 5)
 ```
 
 `reservoir` recognises when user input data is in the form of a time series, and performs its operations accordingly.
@@ -108,9 +108,9 @@ lattice::xyplot.ts(Q, cut = 5)
 Inflow replicates are used in reservoir design and analysis to explore uncertainty. For example, with an inflow time series you can compute the storage capacity required to meet a given demand for water without reservoir failure. This is called the _no fail storage_. Given the importance of no fail storage to the design exercise, you might want to evaluate its uncertainty given the known inflow variability. You can do this by re-computing the no fail storage (or any other design or performance metric) multiple times under _stochastic replicates_ of the inflow time series.
 
 ```{r}
-Q_reps <- dirtyreps(Q, reps = 10)
-head(Q_reps)
-plot(Q_reps)
+inflow_reps <- dirtyreps(inflow, reps = 10)
+head(inflow_reps)
+plot(inflow_reps)
 ```
 
 In the next chapter, you'll put stochastic inflow replicates into practice to compute uncertainty of some reservoir summary statistics.
