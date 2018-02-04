@@ -3,10 +3,10 @@ title: 'Chapter 1: Inflow time series and stochastic techniques'
 author: ''
 date: ''
 output:
+  rmarkdown::pdf_document: null
   rmarkdown::html_document:
     highlight: default
     theme: journal
-  rmarkdown::pdf_document: null
 subtitle: Manual for R package `reservoir`
 ---
 

@@ -3,10 +3,10 @@ title: 'Chapter 2: Water supply reservoir simulation basics'
 author: ''
 date: ''
 output:
+  rmarkdown::pdf_document: null
   rmarkdown::html_document:
     highlight: default
     theme: journal
-  rmarkdown::pdf_document: null
 subtitle: Manual for R package `reservoir`
 ---
 
@@ -14,7 +14,7 @@ subtitle: Manual for R package `reservoir`
 
 * *Simulate a simple water supply reservoir*
 
-* *Estimate the vital reservoir statistics*
+* *Implement a depth-storage-area function and account for evaporation losses*
 
 ## The `simRes` funcion
 
@@ -28,19 +28,18 @@ $0 \le R_{t} \le \min(S_{t} + Q_{t} - L_{t}, R_{max})$
 
 $0 \le S_{t} \le S_{max}$
 
+where $S_{t}$ is the storage level, $Q_{t}$ is the inflow, $L_{t}$ is the loss (e.g., seepage, evaporation), and $R_{t}$ is the release (all in volumetric units) and time period $t$. 
 
-For the most basic case, we can assume a constant target release of water from the reservoir. This means the objective of the reservoir is to provide that release at all times (for example, a reservoir supplying water for a city). Note that the term release will be used interchangably with "target" or "demand". If we also assume no losses from the reservoir (i.e., no evaporation or seepage), then all we need to start simulating the reservoir are the inflow time series, the target release, and the :
+It's important to note the distinction between the release $R$ and the "target" $R_{target}$ (or the "demand"). The release is what is actually released, whilst the target is the desired release. For example, if the reservoir supplies water to a city that has a demand of 1000 megalitres per month, then the monthly target is 1000 megalitres. However, it may be that after a prolonged dry period the reservoir can only supply 900 megalitres (if, for example, $Q + S < R_{target}$). So the actual release would be 900 megalitres, and there would be a 100 megalitre curtailment.
+
+For the most basic reservoir study, we can assume a constant release target and neglect losses from the reservoir. All we need then are the inflow time series, the target release, and the storage capacity:
 
 ```{r}
 library(reservoir)      # load reservoir
 inflow <- resX$Q_Mm3    # reservoir inflow time series
-target <- 150           # target release = 150 million cubic metres / month
-capacity <- 1800        # reservoir capacity = 1000 million cubic metres (1 years' demand)
+target <- 120           # target release = 120 million cubic metres / month
+capacity <- 120 * 12    # reservoir capacity = 1440 million cubic metres (1 year of demand)
 ```
-
-
-> __Important:__ `reservoir` will attemp the meet the target release on each period of simuation. The simulation time step is driven by the input inflow time series, which in this case is _monthly_ (you can check this by entering `frequency(inflow)` into the console). So if we have a release target of 100, `reservoir` will attempt the release 100 units of flow each month.
-
 
 The simulation is executed in `reservoir` using the `simRes` function:
 
@@ -52,62 +51,109 @@ x <- simRes(inflow, target, capacity, plot = F)
 summary(x)
 ```
 
-The simulation produces five output time series: `storage` (the reservoir storage behavior), `releases` (the releases from the reservoir), spill (the water spilled from the reservoir when full), `evaporation`, and `water level`.
-
-Let's intepret the results:
+The simulation produces five output time series: `storage` (the reservoir storage behavior), `releases` (the releases from the reservoir), spill (the water spilled from the reservoir when full), `evaporation`, and `water level`. All of these are time series objects with same frequency as `inflow`. Let's intepret the results:
 
 ```{r}
 plot(x$releases, ylab = "Controlled release (million m3)")
 ```
 
-Recall that the target release is 150 million cubic metres. This means that the reservoir should provide a constant release of 150 Mm3 at all times. But sometimes fails to meet this target. We can see why this happens if we look at storage:
+Recall that the `target` is 150 million cubic metres. This means that the reservoir should provide a constant release of 150 Mm3 at all times. But it fails to meet this target in the early 1940s. We can see why this happens if we look at storage:
 
 ```{r}
 plot(x$storage, ylab = "Reservoir storage level (million m3)")
+abline(h = 0, col = "gray")
 ```
 
-The storage volume fluctuates wildly between full capacity and empty over the simulation period. When the storage becomes empty, there's a risk that the release will not be met in full. If the inflow is low and there is no water in storage, then there's simply not enough water to meet the target. In this particular simulation, the operating mode is _Standard Operating Policy (SOP)_---always release as much of the target as possible given the water available in storage and inflow. `resSim` can operate with optimized and user-defined release rules (covered in chapter 5), but unless otherwise specified, the simulation will assume SOP.
+The storage level fluctuates over the simulation period. When the storage becomes empty, there's a risk of curtailment. If the inflow is low and there is no water in storage, then there's simply not enough water to meet the target. In this particular simulation, the operating mode is _Standard Operating Policy (SOP)_---always release to meet the target given the water available in storage and inflow. `resSim` can operate with optimized and user-defined release rules (covered in chapter 5), but unless otherwise specified, the simulation will assume SOP.
 
-
-> __Standard Operating Policy__ is commonly used in reservoir analysis because (1) it's a very simple operating rule, and (2) it's conservative for reservoir design. `reservoir` assumes SOP as the default for all simulation and analysis functions.
-
-
-Notice that the reservoir is assumed full at the start of the simulation. This assumption can be problematic when analyzing the performance of the reservoir (next section), because the performance statistics can be sensitive to this arbitrary initial storage level. In `reservoir` there are a couple of ways to deal with this problem. You may _double cycle_ the simulation, which means that the inflow sequence is simply replicated, placed end-to-end, and simulated through the storage. As the simulation approaches the second round of inflows, a new starting storage equal to the end of simulation storage will be read (note taht there are other advantages to using a _double cycle_, discussed in Chapter 3). The _double cycle_ is initiated by setting the `double_cycle` parameter to `TRUE`. You may also simply change the initial storage assumption by setting the `S_inital` parameter.
-
-```{r}
-# run simulation with initial storage of 0
-x1 <- simRes(inflow, target, capacity, S_initial = 0, plot = F)
-plot(x1$storage)
-
-# run same simulation with a double cycle
-x2 <- simRes(inflow, target, capacity, S_initial = 0, double_cycle = T, plot = F)
-plot(x2$storage)
-```
+> __Standard Operating Policy__ is commonly used in reservoir analysis because (1) it's a very simple operating rule, and (2) it's conservative for reservoir design applications (next chapter). `reservoir` assumes SOP as the default for all simulation and analysis functions.
 
 
 The reservoir spills over available space in storage is insufficient to hold incoming flow:
 
 ```{r}
-plot(x$storage, ylab = "Reservoir storage level (million m3)")
+plot(x$spill, ylab = "Reservoir storage level (million m3)")
 ```
 
-The two other outputs of `simRes` are the evaporation and the water level. In the above example these outputs are empty, because we did not specify any evaporation or reservoir shape details. In `reservoir`, evaporation is specified as a lenth unit (e.g., metres), which is multiplied by the reservoir surface area to compute volume of water loss. Since a reservoir's surface water area will change depending on storage level (reservoirs are not cuboid shaped), we also need to provide some information on reservoir shape. This can be done by specifying surface area only, or by specifying both surface area and depth (the latter will result in a more realistic shape assumption). Currently, `reservoir` does not allow for you to specifiy your own bathymetry, but instead relies on pre-programmed storage-depth-area functions for a typical reservoir shapes.
+
+Notice that the reservoir is assumed full at the start of the simulation. This assumption can be problematic when analyzing the performance of the reservoir, because the performance statistics can be sensitive to this arbitrary initial storage level (covered in more detail in Chapter 3). In `reservoir` there are a couple of ways to deal with this problem. First, you can _double cycle_ the simulation, which means that the inflow sequence is simply replicated, placed end-to-end, and simulated through the storage. As the simulation approaches the second round of inflows, a new starting storage equal to the end of simulation storage will be read (note that there are other advantages to using a _double cycle_, discussed in Chapter 3). The _double cycle_ is initiated by setting the `double_cycle` parameter to `TRUE`. You may also simply change the initial storage assumption by setting the `S_inital` parameter.
 
 ```{r}
 
-e <- 0.2           # evaporation = 0.2 m
-a <- resX$A_km2    # surface area = 4.1 km2
+# run simulation with initial storage of 0
+x1 <- simRes(inflow, target, capacity, S_initial = 0, plot = F)
+
+# run same simulation with a double cycle
+x2 <- simRes(inflow, target, capacity, S_initial = 0, double_cycle = T, plot = F)
+
+
+
+# compare results
+plot(x2$storage, ylab = "Storage level (Mm3)")
+lines(x1$storage, ylab = "Storage level (Mm3)", col = "red")
+
+
+```
+
+## Depth-storage-area relationships and evaporation losses
+
+The two other outputs of `simRes` are the evaporation and the water level. In the above example the evaporation output is simply zero, whilst the water level is `Inf` (infinity).
+
+```{r}
+head(x$evaporation)  # look at the evaporation time series
+head(x$water_level)  # look at water_level output
+```
+
+In `reservoir`, potential evaporation is specified as a lenth unit (e.g., metres), which is multiplied by the reservoir surface area to compute actual evaporative water losses from the reservoir (cubic metres). Since a reservoir's surface water area will change depending on storage level (reservoirs are generally non-cuboid), we also need to provide some information on reservoir shape. Generally, when the reservoir is full, the water surface area is at its maximum and so the evaporative potential is at its highest. Reservoir shape can be assigned by specifying surface area only, or by specifying both surface area and maximum depth (the latter will result in a more realistic shape assumption). Currently, `reservoir` does not allow for you to specifiy your own bathymetry, but instead relies on pre-programmed storage-depth-area functions for a typical reservoir shapes (details available by typing `?reservoir`.) In the following example we'll assume that both the maximum surface area `A` and the maximum reservoir depth `y` are available for setting the shape:
+
+```{r}
+maxArea <- 70    # square km (water surface area when full)
+maxDepth <- 30   # m (depth when full)
+```
+
+There are two ways in which the evaporation can be implemented: (1) as a constant (suitable for equatorial regions where temperature tends not to vary by season); or (2) as a time-series (best option when there is seasonal temperature, or if actual potential evaporation data are available).
+
+Let's assume that we don't have actual potential evaporation data, but that we know the seasonal average change:
+
+```{r}
+# set up JAN - DEC evaporation signal (metres)
+PE <- c(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3)
+
+# write out as time series matching inflow
+# (note that the ts function will automatically repeat out the seasonal...
+# ... signal if we specify the start, end, and frequency) 
+PE_ts <- ts(PE, start = start(inflow), end = end(inflow), frequency = 12)
+plot(PE_ts, ylab = "Potential evaporation (m)")
+```
+
+Then to execute the simulation we simply supply the simRes function with the new data:
+
+```{r}
+x_incEvap <- simRes(inflow,                   # reservoir inflow
+                    target,                   # target release
+                    capacity,                 # reservoir capacity
+                    surface_area = maxArea,   # water surface area at capacity
+                    max_depth = maxDepth,     # maximum depth at capacity
+                    evap = PE_ts,             # seasonal evaporation signal
+                    plot = F)
+
+# plot the storage time series for the previous simulation (no evap.)
+plot(x$storage, ylab = "Storage level (Mm3)")
+lines(x_incEvap$storage, lty = 2, col = "blue")   
 
 ```
 
 
-> __Important__: when using evaporation it is imperatibe that you use the recommended units given in the `reservoir` documentation (i.e.,  the units specified in the function help when you enter, e.g., `?simRes`). `reservoir` is set up to use metric units: specifically, volumes (storage, release, inflow) in million m3, surface area in km2, and evaporation in m (or kg/m2 * 10 ^ 3).
+> __Important__: when using evaporation it is imperative that you use the recommended units given in the `reservoir` documentation (i.e.,  the units specified in the function help when you enter, e.g., `?simRes`). `reservoir` is set up to use metric units: specifically, volumes (storage, release, inflow) in million m3, surface area in km2, and evaporation in m (or kg/m2 * 10 ^ 3).
 
+How important is the evaporation? In this case it seems that including evaporation causes the reservoir to fail more frequently. Look at the release time series to see how often the target is missed:
 
+```{r}
+plot(x$releases, ylab = "Monthly release (Mm3)")
+lines(x_incEvap$releases, lty = 2, col = "blue")
+```
 
-
-
-
+The frequency, magnitiude, and duration of curtailments in the release are often quantifed to assess reservoir performance. In the next chapter, we'll look at how to use `reservoir` to compute a range of performance metrics.
 
 
 
