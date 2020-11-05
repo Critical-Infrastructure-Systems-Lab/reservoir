@@ -66,7 +66,7 @@ yield <- function(Q, capacity, reliability, demand_profile,
         if (reliability_0 < reliability) {
             max_yield <- mid_yield
         }
-        if (max_yield - min_yield < 0.01) {
+        if (max_yield - min_yield < 0.001) {
             break
         }
         if (i >= max_iterations) {
