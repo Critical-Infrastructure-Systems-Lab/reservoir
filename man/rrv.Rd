@@ -20,4 +20,3 @@ Computes time-based, annual, and volumetric reliability, as well as resilience a
 \examples{
 # Compare reliability, resilience and vulnerability for two operating policies (SOP and SDP).
 }
-

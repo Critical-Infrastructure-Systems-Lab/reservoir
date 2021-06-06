@@ -34,4 +34,3 @@ For seasonal streamflow "hindcasts" based solely on persistence.
 Q <- resX$Q_Mm3
 Q_fcast <- bootcast(Q, H = 3, start_yr = 1995, end_yr = 2000)
 }
-

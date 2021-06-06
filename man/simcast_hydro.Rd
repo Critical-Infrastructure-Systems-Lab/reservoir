@@ -4,10 +4,25 @@
 \alias{simcast_hydro}
 \title{Simulate water supply reservoir operations informed by seasonal forecasts.}
 \usage{
-simcast_hydro(Q, forecast, start_yr, capacity, capacity_live = capacity,
-  surface_area, max_depth, evap, installed_cap, head, qmax, efficiency = 0.9,
-  S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95,
-  1), S_initial = 1, plot = TRUE)
+simcast_hydro(
+  Q,
+  forecast,
+  start_yr,
+  capacity,
+  capacity_live = capacity,
+  surface_area,
+  max_depth,
+  evap,
+  installed_cap,
+  head,
+  qmax,
+  efficiency = 0.9,
+  S_disc = 1000,
+  R_disc = 10,
+  Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  S_initial = 1,
+  plot = TRUE
+)
 }
 \arguments{
 \item{Q}{time series object. Observed reservoir inflow totals. Recommended units: Mm^3 (Million cubic meters).}
@@ -58,4 +73,3 @@ simQ <- simcast_hydro(Q, forecast = forecastQ, start_yr=1980,
 resX$cap_Mm3, surface_area = resX$A_km2, installed_cap = resX$Inst_cap_MW,
 head = resX$y_m, S_disc = 200)
 }
-

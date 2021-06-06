@@ -41,4 +41,3 @@ kNN Bootstrap method: Lall, U. and Sharma, A., 1996. A nearest neighbor bootstra
 
 PARMA method: Salas, J.D. and Fernandez, B., 1993. Models for data generation in hydrology: univariate techniques. In Stochastic Hydrology and its Use in Water Resources Systems Simulation and Optimization (pp. 47-73). Springer Netherlands.
 }
-

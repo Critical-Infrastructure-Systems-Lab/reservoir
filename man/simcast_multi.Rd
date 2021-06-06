@@ -4,11 +4,26 @@
 \alias{simcast_multi}
 \title{Simulate water supply reservoir operations informed by seasonal forecasts.}
 \usage{
-simcast_multi(Q, forecast, start_yr, capacity, target, surface_area, max_depth,
-  evap, R_max = 2 * target, spill_targ = 0.95, vol_targ = 0.75,
-  weights = c(0.7, 0.2, 0.1), S_disc = 1000, R_disc = 10, Q_disc = c(0,
-  0.2375, 0.475, 0.7125, 0.95, 1), loss_exp = c(2, 2, 2), S_initial = 1,
-  plot = TRUE)
+simcast_multi(
+  Q,
+  forecast,
+  start_yr,
+  capacity,
+  target,
+  surface_area,
+  max_depth,
+  evap,
+  R_max = 2 * target,
+  spill_targ = 0.95,
+  vol_targ = 0.75,
+  weights = c(0.7, 0.2, 0.1),
+  S_disc = 1000,
+  R_disc = 10,
+  Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  loss_exp = c(2, 2, 2),
+  S_initial = 1,
+  plot = TRUE
+)
 }
 \arguments{
 \item{Q}{time series object. Observed reservoir inflow totals. Recommended units: Mm^3 (Million cubic meters).}
@@ -60,4 +75,3 @@ layout(1:3)
 simQ <- simcast_multi(Q, resX$cap_Mm3, target = 0.3*mean(Q),
 forecast = forecastQ, start_yr=1980, S_disc = 200)
 }
-

@@ -4,9 +4,21 @@
 \alias{dp_supply}
 \title{Dynamic Programming for water supply reservoirs}
 \usage{
-dp_supply(Q, capacity, target, surface_area, max_depth, evap, S_disc = 1000,
-  R_disc = 10, loss_exp = 2, S_initial = 1, c2g, plot = TRUE,
-  rep_rrv = FALSE)
+dp_supply(
+  Q,
+  capacity,
+  target,
+  surface_area,
+  max_depth,
+  evap,
+  S_disc = 1000,
+  R_disc = 10,
+  loss_exp = 2,
+  S_initial = 1,
+  c2g,
+  plot = TRUE,
+  rep_rrv = FALSE
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
@@ -48,4 +60,3 @@ dp_supply(resX$Q_Mm3, capacity = resX$cap_Mm3, target = 0.3 * mean(resX$Q_Mm3), 
 \seealso{
 \code{\link{sdp_supply}} for Stochastic Dynamic Programming for water supply reservoirs
 }
-

@@ -4,9 +4,19 @@
 \alias{sdp}
 \title{Stochastic Dynamic Programming (Deprecated function; use 'sdp_supply' instead)}
 \usage{
-sdp(Q, capacity, target, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375,
-  0.475, 0.7125, 0.95, 1), loss_exp = 2, S_initial = 1, plot = TRUE,
-  tol = 0.99, rep_rrv = FALSE)
+sdp(
+  Q,
+  capacity,
+  target,
+  S_disc = 1000,
+  R_disc = 10,
+  Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  loss_exp = 2,
+  S_initial = 1,
+  plot = TRUE,
+  tol = 0.99,
+  rep_rrv = FALSE
+)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir.}
@@ -45,4 +55,3 @@ Gregory R. Warnes, Ben Bolker and Thomas Lumley (2014). gtools: Various R progra
 \seealso{
 \code{\link{sdp}} for deterministic Dynamic Programming
 }
-

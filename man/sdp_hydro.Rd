@@ -4,10 +4,26 @@
 \alias{sdp_hydro}
 \title{Stochastic Dynamic Programming for hydropower reservoirs}
 \usage{
-sdp_hydro(Q, capacity, capacity_live = capacity, surface_area, max_depth,
-  evap, installed_cap, head, qmax, efficiency = 0.9, S_disc = 1000,
-  R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
-  S_initial = 1, plot = TRUE, tol = 0.99, Markov = FALSE)
+sdp_hydro(
+  Q,
+  capacity,
+  capacity_live = capacity,
+  surface_area,
+  max_depth,
+  evap,
+  installed_cap,
+  head,
+  qmax,
+  efficiency = 0.9,
+  S_disc = 1000,
+  R_disc = 10,
+  Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  S_initial = 1,
+  plot = TRUE,
+  tol = 0.99,
+  Markov = FALSE,
+  envFlow = FALSE
+)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.}
@@ -43,6 +59,8 @@ sdp_hydro(Q, capacity, capacity_live = capacity, surface_area, max_depth,
 \item{tol}{numerical. The tolerance for policy convergence. The default value is 0.990.}
 
 \item{Markov}{logical. If TRUE the current period inflow is used as a hydrological state variable and inflow persistence is incorporated using a first-order, periodic Markov chain. The default is FALSE.}
+
+\item{envFlow}{logical. If TRUE an environmental flow constraint is applied in simulation.}
 }
 \value{
 Returns the optimal release policy, associated Bellman function, simulated storage, release, evaporation, depth, uncontrolled spill, and power generated, and total energy generated.
@@ -60,4 +78,3 @@ installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), Markov = TRUE)
 \seealso{
 \code{\link{dp_hydro}} for deterministic Dynamic Programming for hydropower reservoirs.
 }
-

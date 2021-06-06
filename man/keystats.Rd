@@ -22,4 +22,3 @@ For quuickly analyzing a range of stats relating to inflows, outflows, storage d
 \examples{
 keystats(resX$Q_Mm3, target = 50, capacity = resX$cap_Mm3)
 }
-

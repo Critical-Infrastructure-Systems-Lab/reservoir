@@ -4,10 +4,24 @@
 \alias{dp_multi}
 \title{Dynamic Programming with multiple objectives (supply, flood control, amenity)}
 \usage{
-dp_multi(Q, capacity, target, surface_area, max_depth, evap, R_max = 2 *
-  target, spill_targ = 0.95, vol_targ = 0.75, weights = c(0.7, 0.2, 0.1),
-  loss_exp = c(2, 2, 2), S_disc = 1000, R_disc = 10, S_initial = 1, c2g,
-  plot = TRUE)
+dp_multi(
+  Q,
+  capacity,
+  target,
+  surface_area,
+  max_depth,
+  evap,
+  R_max = 2 * target,
+  spill_targ = 0.95,
+  vol_targ = 0.75,
+  weights = c(0.7, 0.2, 0.1),
+  loss_exp = c(2, 2, 2),
+  S_disc = 1000,
+  R_disc = 10,
+  S_initial = 1,
+  c2g,
+  plot = TRUE
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
@@ -55,4 +69,3 @@ dp_multi(resX$Q_Mm3, cap = resX$cap_Mm3, target = 0.2 * mean(resX$Q_Mm3), S_disc
 \seealso{
 \code{\link{sdp_multi}} for Stochastic Dynamic Programming
 }
-

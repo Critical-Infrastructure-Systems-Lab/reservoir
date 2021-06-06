@@ -4,8 +4,18 @@
 \alias{simRes}
 \title{Simulate a water supply reservoir with specified operating policy.}
 \usage{
-simRes(Q, target, capacity, surface_area, max_depth, evap,
-  double_cycle = FALSE, plot = TRUE, S_initial = 1, policy)
+simRes(
+  Q,
+  target,
+  capacity,
+  surface_area,
+  max_depth,
+  evap,
+  double_cycle = FALSE,
+  plot = TRUE,
+  S_initial = 1,
+  policy
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir. Mm^3 (Million cubic meters).}
@@ -60,4 +70,3 @@ surface_area = area, max_depth = max_d, evap = ev, Markov = TRUE, plot = FALSE, 
 simSDP <- simRes(Q_post1980, capacity = res_cap, target = targ,
 surface_area = area, max_depth = max_d, evap = ev, policy = policy_x)
 }
-

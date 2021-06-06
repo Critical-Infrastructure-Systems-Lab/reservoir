@@ -4,9 +4,23 @@
 \alias{dp_hydro}
 \title{Dynamic Programming for hydropower reservoirs}
 \usage{
-dp_hydro(Q, capacity, capacity_live = capacity, surface_area, evap,
-  installed_cap, head, qmax, max_depth, efficiency = 0.9, S_disc = 1000,
-  R_disc = 10, S_initial = 1, r2g, plot = TRUE)
+dp_hydro(
+  Q,
+  capacity,
+  capacity_live = capacity,
+  surface_area,
+  evap,
+  installed_cap,
+  head,
+  qmax,
+  max_depth,
+  efficiency = 0.9,
+  S_disc = 1000,
+  R_disc = 10,
+  S_initial = 1,
+  r2g,
+  plot = TRUE
+)
 }
 \arguments{
 \item{Q}{time series object. Net inflows to the reservoir. Must be in volumetric units of Mm^3.}
@@ -53,4 +67,3 @@ installed_cap = resX$Inst_cap_MW, qmax = mean(resX$Q_Mm3), S_disc = 100)
 \seealso{
 \code{\link{sdp_hydro}} for Stochastic Dynamic Programming for hydropower reservoirs.
 }
-

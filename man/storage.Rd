@@ -4,8 +4,16 @@
 \alias{storage}
 \title{Storage-Reliability-Yield (SRY) relationships: Storage computation}
 \usage{
-storage(Q, yield, reliability, demand_profile, plot = TRUE, S_initial = 1,
-  max_iterations = 50, double_cycle = FALSE)
+storage(
+  Q,
+  yield,
+  reliability,
+  demand_profile,
+  plot = TRUE,
+  S_initial = 1,
+  max_iterations = 50,
+  double_cycle = FALSE
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir. Recommended units: Mm^3 (Million cubic meters).}
@@ -35,4 +43,3 @@ Returns the required storage for given inflow time series, yield, and target tim
 layout(1:3)
 storage(resX$Q_Mm3 * 20, yield = 0.9 * mean(resX$Q_Mm3), reliability = 0.95)
 }
-

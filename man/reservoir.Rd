@@ -3,7 +3,6 @@
 \docType{package}
 \name{reservoir}
 \alias{reservoir}
-\alias{reservoir-package}
 \title{reservoir: Tools for Analysis, Design, and Operation of Water Supply Storages}
 \description{
 Measure single reservoir performance using resilience, reliability, and vulnerability metrics; compute storage-yield-reliability relationships; determine no-fail Rippl storage with sequent peak analysis; optimize release decisions for water supply, hydropower, and multi-objective reservoirs using deterministic and stochastic dynamic programming; evaluate inflow characteristics.
@@ -41,6 +40,7 @@ The PARMA is fitted for p = 1 and q = 1, or PARMA(1,1). Fitting is done numerica
 When using the PARMA model, users do not need to transform or deseasonalize the input data as this is done automatically within the algorithm.
 The kNN bootstrap is non-parametric, so no intial data preparation is required here either.
 }
+
 \examples{
 # 1. Express the distribution of Rippl storage for a known inflow process...
 layout(1:4)
@@ -115,4 +115,3 @@ kNN Bootstrap method: Lall, U. and Sharma, A. (1996). A nearest neighbor bootstr
 
 PARMA method: Salas, J.D. and Fernandez, B. (1993). Models for data generation in hydrology: univariate techniques. In Stochastic Hydrology and its Use in Water Resources Systems Simulation and Optimization (pp. 47-73). Springer Netherlands.
 }
-

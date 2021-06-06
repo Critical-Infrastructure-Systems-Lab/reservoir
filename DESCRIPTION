@@ -1,10 +1,10 @@
 Package: reservoir
 Type: Package
 Title: Tools for Analysis, Design, and Operation of Water Supply Storages
-Version: 1.1.5
-Date: 2016-04-14
+Version: 1.1.6
+Date: 2021-06-06
 Authors@R: c(
-    person("Sean", "Turner", , "swd.turner@gmail.com", c("aut", "cre")),
+    person("Sean", "Turner", , "sean.turner@pnnl.gov", c("aut", "cre")),
     person("Jia Yi", "Ng", , "ngjiayi93@hotmail.com", "aut"),
     person("Stefano", "Galelli", , "stefano_galelli@sutd.edu.sg", "aut")
     )
@@ -23,4 +23,4 @@ Imports:
     stats,
     graphics,
     moments
-RoxygenNote: 5.0.1
+RoxygenNote: 7.1.1

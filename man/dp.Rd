@@ -4,8 +4,17 @@
 \alias{dp}
 \title{Dynamic Programming (Deprecated function; use 'dp_supply' instead)}
 \usage{
-dp(Q, capacity, target, S_disc = 1000, R_disc = 10, loss_exp = 2,
-  S_initial = 1, plot = TRUE, rep_rrv = FALSE)
+dp(
+  Q,
+  capacity,
+  target,
+  S_disc = 1000,
+  R_disc = 10,
+  loss_exp = 2,
+  S_initial = 1,
+  plot = TRUE,
+  rep_rrv = FALSE
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflows to the reservoir.}
@@ -38,4 +47,3 @@ Loucks, D.P., van Beek, E., Stedinger, J.R., Dijkman, J.P.M. and Villars, M.T. (
 \seealso{
 \code{\link{sdp}} for Stochastic Dynamic Programming
 }
-

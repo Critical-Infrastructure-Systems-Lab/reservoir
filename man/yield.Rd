@@ -4,8 +4,16 @@
 \alias{yield}
 \title{Storage-Reliability-Yield (SRY) relationships: Yield computation}
 \usage{
-yield(Q, capacity, reliability, demand_profile, plot = TRUE, S_initial = 1,
-  max_iterations = 50, double_cycle = FALSE)
+yield(
+  Q,
+  capacity,
+  reliability,
+  demand_profile,
+  plot = TRUE,
+  S_initial = 1,
+  max_iterations = 50,
+  double_cycle = FALSE
+)
 }
 \arguments{
 \item{Q}{vector or time series object. Net inflow totals to the reservoir.}
@@ -40,4 +48,3 @@ quart_ts <- aggregate(resX$Q_Mm3, nfrequency = 4)
 yld <- yield(quart_ts,
 capacity = 500, reliability = 0.9, demand_profile = c(0.8, 1.2, 1.2, 0.8))
 }
-

@@ -4,9 +4,22 @@
 \alias{simcast_supply}
 \title{Simulate water supply reservoir operations informed by seasonal forecasts.}
 \usage{
-simcast_supply(Q, forecast, start_yr, capacity, target, surface_area, max_depth,
-  evap, S_disc = 1000, R_disc = 10, Q_disc = c(0, 0.2375, 0.475, 0.7125,
-  0.95, 1), loss_exp = 2, S_initial = 1, plot = TRUE)
+simcast_supply(
+  Q,
+  forecast,
+  start_yr,
+  capacity,
+  target,
+  surface_area,
+  max_depth,
+  evap,
+  S_disc = 1000,
+  R_disc = 10,
+  Q_disc = c(0, 0.2375, 0.475, 0.7125, 0.95, 1),
+  loss_exp = 2,
+  S_initial = 1,
+  plot = TRUE
+)
 }
 \arguments{
 \item{Q}{time series object. Observed reservoir inflow totals. Recommended units: Mm^3 (Million cubic meters).}
@@ -50,4 +63,3 @@ layout(1:3)
 simQ <- simcast_supply(Q, resX$cap_Mm3, target = 0.3*mean(Q),
 forecast = forecastQ, start_yr=1980, S_disc = 200)
 }
-

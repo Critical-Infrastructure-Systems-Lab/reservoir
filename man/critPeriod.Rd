@@ -34,4 +34,3 @@ critPeriod(storage_behavior, "average")
 ## all critical periods
 critPeriod(storage_behavior, "all")
 }
-
